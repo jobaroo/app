@@ -5,7 +5,7 @@ import cats.implicits.*
 import org.http4s.*
 import cats.effect.*
 import com.jobaroo.config.EmberConfig
-import com.jobaroo.http.routes.HealthRoutes
+import com.jobaroo.http.routes.{HealthRoutes, HttpApi}
 import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.ember.server.EmberServerBuilder
@@ -22,7 +22,7 @@ case object Application extends IOApp.Simple:
       .default[IO]
       .withHost(config.host)
       .withPort(config.port)
-      .withHttpApp(HealthRoutes[IO].routes.orNotFound)
+      .withHttpApp(HttpApi[IO].endpoints.orNotFound)
       .build
       .use(_ => IO.println("jobaroo is online") *> IO.never)
   }
