@@ -4,7 +4,7 @@ import java.util.UUID
 
 object job:
 
-  final case class Job(id: UUID, date: Long, ownerEmail: String, jobInfo: JobInfo, active: Boolean = true)
+  final case class Job(id: UUID, date: Long, ownerEmail: String, jobInfo: JobInfo, active: Boolean = false)
 
   final case class JobInfo(
     company    : String,
