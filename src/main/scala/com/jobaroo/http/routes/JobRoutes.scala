@@ -11,11 +11,13 @@ import cats.implicits.*
 import cats.effect.*
 import com.jobaroo.domain.job.{Job, JobInfo}
 import com.jobaroo.http.response.FailureResponse
+import org.typelevel.log4cats.Logger
+import com.jobaroo.logging.syntax.*
 
 import java.util.UUID
 import scala.collection.mutable
 
-class JobRoutes[F[_]: Concurrent] private extends Http4sDsl[F]:
+class JobRoutes[F[_] : Concurrent : Logger] private extends Http4sDsl[F]:
 
   private val database: mutable.Map[UUID, Job] = mutable.Map.empty
 
@@ -43,8 +45,9 @@ class JobRoutes[F[_]: Concurrent] private extends Http4sDsl[F]:
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "create" =>
       for
-        jobInfo <- req.as[JobInfo]
+        jobInfo <- req.as[JobInfo].logError(e => s"payload parsing has failed: $e")
         job     <- createJob(jobInfo)
+        _       <- database.put(job.id, job).pure[F]
         resp    <- Created(job.id)
       yield resp
   }
@@ -77,4 +80,4 @@ class JobRoutes[F[_]: Concurrent] private extends Http4sDsl[F]:
   )
 
 object JobRoutes:
-  def apply[F[_]: Concurrent]: JobRoutes[F] = new JobRoutes[F]
+  def apply[F[_] : Concurrent : Logger]: JobRoutes[F] = new JobRoutes[F]
