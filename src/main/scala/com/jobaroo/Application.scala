@@ -5,7 +5,8 @@ import cats.implicits.*
 import org.http4s.*
 import cats.effect.*
 import com.jobaroo.config.EmberConfig
-import com.jobaroo.http.routes.{HealthRoutes, HttpApi}
+import com.jobaroo.http.routes.HealthRoutes
+import com.jobaroo.modules.*
 import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.ember.server.EmberServerBuilder
@@ -22,11 +23,17 @@ case object Application extends IOApp.Simple:
   given Logger[IO] = Slf4jLogger.getLogger[IO]
 
   override def run: IO[Unit] = ConfigSource.default.loadF[IO, EmberConfig].flatMap { config =>
-    EmberServerBuilder
-      .default[IO]
-      .withHost(config.host)
-      .withPort(config.port)
-      .withHttpApp(HttpApi[IO].endpoints.orNotFound)
-      .build
-      .use(_ => IO.println("jobaroo is online") *> IO.never)
+    val app =
+      for
+        core    <- Core[IO]
+        httpApi <- HttpApi(core)
+        server  <- EmberServerBuilder
+                     .default[IO]
+                     .withHost(config.host)
+                     .withPort(config.port)
+                     .withHttpApp(httpApi.endpoints.orNotFound)
+                     .build
+      yield server
+
+    app.use(_ => IO.println("jobaroo is online") *> IO.never)
   }
