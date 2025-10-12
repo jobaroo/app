@@ -24,7 +24,7 @@ trait Jobs[F[_]]:
   def all(): F[List[Job]]
   def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
 
-class LiveJobs[F[_] : MonadCancelThrow : Logger] private (xa: Transactor[F]) extends Jobs[F]:
+final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transactor[F]) extends Jobs[F]:
 
   override def create(ownerEmail: String, jobInfo: JobInfo): F[UUID] =
     sql"""
