@@ -14,11 +14,12 @@ import com.jobaroo.domain.job.{Job, JobInfo}
 import com.jobaroo.http.response.FailureResponse
 import org.typelevel.log4cats.Logger
 import com.jobaroo.logging.syntax.*
+import com.jobaroo.http.validation.syntax.*
 
 import java.util.UUID
 import scala.collection.mutable
 
-class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F]) extends Http4sDsl[F]:
+class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F]) extends Http4sValidationDsl[F]:
 
   // TODO: POST /jobs?offset=xyz&limit=y { filters }
   private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -39,23 +40,25 @@ class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F]) extends Http
 
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "create" =>
-      for
-        jobInfo <- req.as[JobInfo].logError(e => s"payload parsing has failed: $e")
-        jobId   <- jobs.create("TODO", jobInfo)
-        resp    <- Created(jobId)
-      yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for
+          jobId <- jobs.create("TODO", jobInfo)
+          resp  <- Created(jobId)
+        yield resp
+      }
   }
 
   // TODO: PUT /jobs/id { jobInfo }
   private val updateJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ PUT -> Root / UUIDVar(id) =>
-      for
-        jobInfo <- req.as[JobInfo]
-        newJob  <- jobs.update(id, jobInfo)
-        resp    <- newJob match
-                     case Some(_) => Ok()
-                     case None    => NotFound(FailureResponse(s"Job $id not found."))
-      yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for
+          newJob <- jobs.update(id, jobInfo)
+          resp   <- newJob match
+                      case Some(_) => Ok()
+                      case None    => NotFound(FailureResponse(s"Job $id not found."))
+        yield resp
+      }
   }
 
   // TODO: DELETE /jobs/id
