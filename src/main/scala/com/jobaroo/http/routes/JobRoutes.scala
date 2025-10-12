@@ -10,7 +10,8 @@ import cats.*
 import cats.implicits.*
 import cats.effect.*
 import com.jobaroo.core.Jobs
-import com.jobaroo.domain.job.{Job, JobInfo}
+import com.jobaroo.domain.job.{Job, JobFilter, JobInfo}
+import com.jobaroo.domain.pagination.Pagination
 import com.jobaroo.http.response.FailureResponse
 import org.typelevel.log4cats.Logger
 import com.jobaroo.logging.syntax.*
@@ -21,11 +22,15 @@ import scala.collection.mutable
 
 class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F]) extends Http4sValidationDsl[F]:
 
+  object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
+  object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
+
   // TODO: POST /jobs?offset=xyz&limit=y { filters }
   private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] {
-    case POST -> Root =>
+    case req @ POST -> Root :? LimitQueryParam(limit) +& OffsetQueryParam(offset) =>
       for
-        allJobs <- jobs.all()
+        filter <- req.as[JobFilter]
+        allJobs <- jobs.all(filter, Pagination(limit, offset))
         resp    <- Ok(allJobs)
       yield resp
   }
