@@ -100,3 +100,9 @@ hs_err_pid*
 
 # Sketches and other stuff
 src/main/scala/dojo/*
+
+# Metals
+.metals/
+.bloop/
+.scala-build/
+metals.sbt
