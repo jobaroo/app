@@ -17,9 +17,9 @@ lazy val javaMailVersion            = "1.6.2"
 
 lazy val server = (project in file("."))
   .settings(
-    name         := jobaroo,
-    scalaVersion := "3.2.1",
-    organization := s"com.$jobaroo",
+    name                := jobaroo,
+    scalaVersion        := "3.2.1",
+    organization        := s"com.$jobaroo",
     libraryDependencies ++= Seq(
       "org.typelevel"         %% "cats-effect"                   % catsEffectVersion,
       "org.http4s"            %% "http4s-dsl"                    % http4sVersion,
@@ -43,5 +43,5 @@ lazy val server = (project in file("."))
       "org.testcontainers"     % "postgresql"                    % testContainerVersion       % Test,
       "ch.qos.logback"         % "logback-classic"               % logbackVersion             % Test
     ),
-    Compile / mainClass := Some("com.jobaroo.Application ")
+    Compile / mainClass := Some("com.jobaroo.Application")
   )
