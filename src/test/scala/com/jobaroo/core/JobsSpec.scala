@@ -6,11 +6,17 @@ import doobie.util.*
 import doobie.postgres.implicits.*
 import doobie.implicits.*
 import cats.effect.testing.scalatest.AsyncIOSpec
+import com.jobaroo.domain.job.JobFilter
+import com.jobaroo.domain.pagination.Pagination
 import com.jobaroo.fixtures.JobFixture
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieSpec("sql/jobs.sql") with JobFixture:
+
+  given Logger[IO] = Slf4jLogger.getLogger[IO]
 
   "Jobs 'algebra'" - {
     "should return no job if the given UUID does not exist" in {
@@ -114,6 +120,30 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
           yield deletedJobsCount
 
         program.asserting { _ shouldBe 0 }
+      }
+    }
+
+    "should return remote jobs" in {
+      transactor.use { xa =>
+        val program =
+          for
+            jobs    <- LiveJobs[IO](xa)
+            allJobs <- jobs.all(JobFilter(remote = true), Pagination(None, None))
+          yield allJobs
+
+        program.asserting { _ shouldBe List(remoteSoftwareEngineerJob) }
+      }
+    }
+
+    "should filter jobs by tags" in {
+      transactor.use { xa =>
+        val program =
+          for
+            jobs    <- LiveJobs[IO](xa)
+            allJobs <- jobs.all(JobFilter(remote = true, tags = List("c++", "haskell")), Pagination(None, None))
+          yield allJobs
+
+        program.asserting { _ shouldBe Nil }
       }
     }
 

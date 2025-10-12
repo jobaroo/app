@@ -14,7 +14,8 @@ import org.scalatest.matchers.should.Matchers
 import cats.effect.*
 import cats.implicits.*
 import com.jobaroo.core.Jobs
-import com.jobaroo.domain.job
+import com.jobaroo.domain.job.*
+import com.jobaroo.domain.pagination.*
 import com.jobaroo.domain.job.Job
 import org.http4s.HttpRoutes
 import org.typelevel.log4cats.Logger
@@ -30,25 +31,28 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
   val jobs: Jobs[IO] = new Jobs[IO]:
 
-    override def create(ownerEmail: String, jobInfo: job.JobInfo): IO[UUID] = IO.pure(berlinTechLeadJobId)
+    override def create(ownerEmail: String, jobInfo: JobInfo): IO[UUID] = IO.pure(berlinTechLeadJobId)
 
-    override def update(id: UUID, jobInfo: job.JobInfo): IO[Option[job.Job]] =
+    override def update(id: UUID, jobInfo: JobInfo): IO[Option[Job]] =
       IO.pure(Option.when(id == berlinTechLeadJobId)(remoteSoftwareEngineerJob))
 
     override def delete(id: UUID): IO[Int] =
       IO.pure(if id == berlinTechLeadJobId then 1 else 0)
 
-    override def find(id: UUID): IO[Option[job.Job]] =
+    override def find(id: UUID): IO[Option[Job]] =
       IO.pure(Option.when(id == berlinTechLeadJobId)(berlinTechLeadJob))
 
-    override def all(): IO[List[job.Job]] = IO.pure(berlinTechLeadJob :: Nil)
+    override def all(): IO[List[Job]] = IO.pure(berlinTechLeadJob :: Nil)
 
-  given Logger[IO]              = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
+    override def all(filter: JobFilter, pagination: Pagination): IO[List[Job]] =
+      if filter.remote then IO.pure(Nil) else IO.pure(berlinTechLeadJob :: Nil)
 
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
   ////////////////////////////////////////////////////////////////////////////////////
+
+  given Logger[IO]              = Slf4jLogger.getLogger[IO]
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {
@@ -63,11 +67,21 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
     "should return all jobs" in {
       for
-        resp <- jobRoutes.orNotFound.run(Request(method = Method.POST, uri = uri"/jobs"))
+        resp <- jobRoutes.orNotFound.run(Request(method = Method.POST, uri = uri"/jobs").withEntity(JobFilter()))
         jobs <- resp.as[List[Job]]
       yield
         resp.status shouldBe Status.Ok
         jobs shouldBe List(berlinTechLeadJob)
+    }
+
+    "should return all jobs that satisfy a filter" in {
+      for
+        resp <-
+          jobRoutes.orNotFound.run(Request(method = Method.POST, uri = uri"/jobs").withEntity(JobFilter(remote = true)))
+        jobs <- resp.as[List[Job]]
+      yield
+        resp.status shouldBe Status.Ok
+        jobs shouldBe Nil
     }
 
     "should create a new job" in {
