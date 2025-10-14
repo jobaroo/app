@@ -7,7 +7,7 @@ trait UserFixture:
 
   val christopherNolan = User(
     email = "christopher@nolan.com",
-    hashedPassword = "secret",
+    hashedPassword = "$2a$10$wjYnY4RXhmgIAuf6ZGVSiOeScly6.lzSTWpsLTxCoAM4QyK4C5Xr6", // secret
     role = Role.ADMIN,
     firstName = Some("Christopher"),
     lastName = Some("Nolan"),
@@ -16,7 +16,7 @@ trait UserFixture:
 
   val johnnyDepp = User(
     email = "johnny@depp.com",
-    hashedPassword = "another_secret",
+    hashedPassword = "$2a$10$P101kyiWnYie4mNL58Wrgua/w2DKDo22eTh/5HgkWIP.43MY7KEte", // another_secret
     role = Role.RECRUITER,
     firstName = Some("Johnny"),
     lastName = Some("Depp"),
@@ -25,7 +25,7 @@ trait UserFixture:
 
   val jenniferLawrence = User(
     email = "jennifer@lawrence.com",
-    hashedPassword = "pwd",
+    hashedPassword = "$2a$10$xQt8MazSRexmSWIDRz2hauTKehjhT9xKAzPim5AC1vN0SgMZBF7Uy", // pwd
     role = Role.RECRUITER,
     firstName = Some("Jennifer"),
     lastName = Some("Lawrence"),

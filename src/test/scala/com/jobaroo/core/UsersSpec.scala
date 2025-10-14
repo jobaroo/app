@@ -7,8 +7,6 @@ import doobie.postgres.implicits.*
 import com.jobaroo.domain.user.*
 import doobie.implicits.*
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.jobaroo.domain.job.JobFilter
-import com.jobaroo.domain.pagination.Pagination
 import com.jobaroo.fixtures.UserFixture
 import org.postgresql.util.PSQLException
 import org.scalatest.Inside

@@ -17,7 +17,7 @@ INSERT INTO users(email,
                   firstName,
                   lastName,
                   company)
-VALUES ('christopher@nolan.com', 'secret', 'ADMIN', 'Christopher', 'Nolan', 'Google');
+VALUES ('christopher@nolan.com', '$2a$10$wjYnY4RXhmgIAuf6ZGVSiOeScly6.lzSTWpsLTxCoAM4QyK4C5Xr6', 'ADMIN', 'Christopher', 'Nolan', 'Google');
 
 INSERT INTO users(email,
                   hashedPassword,
@@ -25,4 +25,4 @@ INSERT INTO users(email,
                   firstName,
                   lastName,
                   company)
-VALUES ('johnny@depp.com', 'another_secret', 'RECRUITER', 'Johnny', 'Depp', 'Amazon');
+VALUES ('johnny@depp.com', '$2a$10$wjYnY4RXhmgIAuf6ZGVSiOeScly6.lzSTWpsLTxCoAM4QyK4C5Xr6', 'RECRUITER', 'Johnny', 'Depp', 'Amazon');
