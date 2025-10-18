@@ -5,9 +5,13 @@ import com.jobaroo.domain.user.Role.RECRUITER
 
 trait UserFixture:
 
+  val christopherNolanPassword = "secret"
+  val johnnyDeppPassword       = "another_secret"
+  val jenniferLawrencePassword = "pwd"
+
   val christopherNolan = User(
     email = "christopher@nolan.com",
-    hashedPassword = "$2a$10$wjYnY4RXhmgIAuf6ZGVSiOeScly6.lzSTWpsLTxCoAM4QyK4C5Xr6", // secret
+    hashedPassword = "$2a$10$wjYnY4RXhmgIAuf6ZGVSiOeScly6.lzSTWpsLTxCoAM4QyK4C5Xr6",
     role = Role.ADMIN,
     firstName = Some("Christopher"),
     lastName = Some("Nolan"),
@@ -16,7 +20,7 @@ trait UserFixture:
 
   val johnnyDepp = User(
     email = "johnny@depp.com",
-    hashedPassword = "$2a$10$P101kyiWnYie4mNL58Wrgua/w2DKDo22eTh/5HgkWIP.43MY7KEte", // another_secret
+    hashedPassword = "$2a$10$P101kyiWnYie4mNL58Wrgua/w2DKDo22eTh/5HgkWIP.43MY7KEte",
     role = Role.RECRUITER,
     firstName = Some("Johnny"),
     lastName = Some("Depp"),

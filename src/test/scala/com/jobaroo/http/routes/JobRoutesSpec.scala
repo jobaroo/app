@@ -29,7 +29,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
   // prep
   ////////////////////////////////////////////////////////////////////////////////////
 
-  val jobs: Jobs[IO] = new Jobs[IO]:
+  private val mockJobs: Jobs[IO] = new Jobs[IO]:
 
     override def create(ownerEmail: String, jobInfo: JobInfo): IO[UUID] = IO.pure(berlinTechLeadJobId)
 
@@ -52,7 +52,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
   ////////////////////////////////////////////////////////////////////////////////////
 
   given Logger[IO]              = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {

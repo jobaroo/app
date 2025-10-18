@@ -27,10 +27,11 @@ trait Auth[F[_]]:
   def login(email: String, password: String): F[Option[JwtToken]]
   def signUp(newUserInfo: NewUserInfo): F[Option[User]]
   def changePassword(email: String, newPasswordInfo: NewPasswordInfo): F[Either[String, Option[User]]]
+  def authenticator: Authenticator[F]
 
 final class LiveAuth[F[_] : Async : Logger] private (
   val users        : Users[F],
-  val authenticator: Authenticator[F]
+  override val authenticator: Authenticator[F]
 ) extends Auth[F]:
 
   override def login(email: String, password: String): F[Option[JwtToken]] =
@@ -46,7 +47,7 @@ final class LiveAuth[F[_] : Async : Logger] private (
     for
       optUser       <- users.find(newUserInfo.email)
       validatedUser <- optUser match
-                         case Some(user) => None.pure[F]
+                         case Some(_) => None.pure[F]
                          case None       =>
                            for
                              hashedPwd <- BCrypt.hashpw[F](newUserInfo.password)
