@@ -19,7 +19,7 @@ import com.jobaroo.domain.auth.{LoginInfo, NewPasswordInfo, NewUserInfo}
 import com.jobaroo.domain.security.JwtToken
 import com.jobaroo.domain.user.User
 import com.jobaroo.domain.{auth, user}
-import com.jobaroo.fixtures.UserFixture
+import com.jobaroo.fixtures.SecuredRouteFixture
 import org.http4s.HttpRoutes
 import org.http4s.headers.Authorization
 import org.typelevel.ci.CIStringSyntax
@@ -31,25 +31,14 @@ import tsec.authentication.IdentityStore
 import tsec.jws.mac.JWTMac
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.BCrypt
-
+import com.jobaroo.fixtures.SecuredRouteFixture.withBearerToken
 import scala.concurrent.duration.*
 
-class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with UserFixture:
+class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with SecuredRouteFixture:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // prep
   ////////////////////////////////////////////////////////////////////////////////////
-
-  private val mockAuthenticator: Authenticator[IO] =
-    val idStore: IdentityStore[IO, String, User] = (email: String) =>
-      if email == jenniferLawrence.email then OptionT.pure(jenniferLawrence) else OptionT.none[IO, User]
-
-    JWTAuthenticator.unbacked.inBearerToken(
-      expiryDuration = 1.day,
-      maxIdle = None,
-      identityStore = idStore,
-      signingKey = HMACSHA256.unsafeGenerateKey
-    )
 
   private val mockAuth: Auth[IO] = new Auth[IO]:
 
@@ -70,13 +59,6 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
     override def delete(email: String): IO[Boolean] = IO.pure(true)
       
     override def authenticator: Authenticator[IO] = mockAuthenticator
-
-  extension (r: Request[IO])
-
-    def withBearerToken(jwtToken: JwtToken): Request[IO] = r.putHeaders {
-      val jwtString = JWTMac.toEncodedString[IO, Crypto](jwtToken.jwt)
-      Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
-    }
 
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
@@ -144,7 +126,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
         resp     <- authRoutes.orNotFound.run(
-                      Request(method = Method.POST, uri = uri"/auth/logout").withBearerToken(jwtToken)
+          Request[IO](method = Method.POST, uri = uri"/auth/logout").withBearerToken(jwtToken)
                     )
       yield resp.status shouldBe Status.Ok
     }
@@ -159,7 +141,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
         resp     <- authRoutes.orNotFound.run(
-                      Request(method = Method.PUT, uri = uri"/auth/users/password")
+                      Request[IO](method = Method.PUT, uri = uri"/auth/users/password")
                         .withBearerToken(jwtToken)
                         .withEntity(NewPasswordInfo("wrong_password", "new_password"))
                     )
@@ -179,7 +161,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
         resp     <- authRoutes.orNotFound.run(
-                      Request(method = Method.PUT, uri = uri"/auth/users/password")
+                      Request[IO](method = Method.PUT, uri = uri"/auth/users/password")
                         .withBearerToken(jwtToken)
                         .withEntity(NewPasswordInfo(jenniferLawrencePassword, "new_password"))
                     )
@@ -190,7 +172,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(johnnyDepp.email)
         resp <- authRoutes.orNotFound.run(
-          Request(method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+          Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
             .withBearerToken(jwtToken)
         )
       yield resp.status shouldBe Status.Unauthorized
@@ -200,7 +182,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
         resp <- authRoutes.orNotFound.run(
-          Request(method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+          Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
             .withBearerToken(jwtToken)
         )
       yield resp.status shouldBe Status.Ok

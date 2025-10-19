@@ -7,7 +7,8 @@ import org.http4s.implicits.*
 import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.jobaroo.fixtures.JobFixture
+import com.jobaroo.fixtures.{JobFixture, SecuredRouteFixture}
+import com.jobaroo.fixtures.SecuredRouteFixture.withBearerToken
 import org.http4s.dsl.Http4sDsl
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -23,7 +24,8 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.util.UUID
 
-class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with JobFixture:
+class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with JobFixture
+    with SecuredRouteFixture:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // prep
@@ -52,7 +54,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
   ////////////////////////////////////////////////////////////////////////////////////
 
   given Logger[IO]              = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs, mockAuthenticator).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {
@@ -86,10 +88,13 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
     "should create a new job" in {
       for
-        resp <- jobRoutes.orNotFound.run(
-                  Request(method = Method.POST, uri = uri"/jobs/create").withEntity(berlinTechLeadJobInfo)
-                )
-        id   <- resp.as[UUID]
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp     <- jobRoutes.orNotFound.run(
+                      Request[IO](method = Method.POST, uri = uri"/jobs/create")
+                        .withEntity(berlinTechLeadJobInfo)
+                        .withBearerToken(jwtToken)
+                    )
+        id       <- resp.as[UUID]
       yield
         resp.status shouldBe Status.Created
         id shouldBe berlinTechLeadJobId
@@ -97,37 +102,43 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
     "should only update a job that exists" in {
       for
-        resp <- jobRoutes.orNotFound.run(
-                  Request(method = Method.PUT, uri = uri"/jobs/843df718-ec6e-4d49-9289-f799c0f40064").withEntity(
-                    berlinTechLeadJobInfo
-                  )
-                )
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp     <- jobRoutes.orNotFound.run(
+                      Request[IO](method = Method.PUT, uri = uri"/jobs/843df718-ec6e-4d49-9289-f799c0f40064")
+                        .withEntity(berlinTechLeadJobInfo)
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.Ok
     }
 
     "should not update a job that doesn't exist" in {
       for
-        resp <- jobRoutes.orNotFound.run(
-                  Request(method = Method.PUT, uri = uri"/jobs/843df718-ec6e-4d49-9289-000000000000").withEntity(
-                    berlinTechLeadJobInfo
-                  )
-                )
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp     <- jobRoutes.orNotFound.run(
+                      Request[IO](method = Method.PUT, uri = uri"/jobs/843df718-ec6e-4d49-9289-000000000000")
+                        .withEntity(berlinTechLeadJobInfo)
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.NotFound
     }
 
     "should only delete a job that exists" in {
       for
-        resp <- jobRoutes.orNotFound.run(
-                  Request(method = Method.DELETE, uri = uri"/jobs/843df718-ec6e-4d49-9289-f799c0f40064")
-                )
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp     <- jobRoutes.orNotFound.run(
+                      Request[IO](method = Method.DELETE, uri = uri"/jobs/843df718-ec6e-4d49-9289-f799c0f40064")
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.Ok
     }
 
     "should not delete a job that doesn't exist" in {
       for
-        resp <- jobRoutes.orNotFound.run(
-                  Request(method = Method.DELETE, uri = uri"/jobs/843df718-ec6e-4d49-9289-000000000000")
-                )
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp     <- jobRoutes.orNotFound.run(
+                      Request[IO](method = Method.DELETE, uri = uri"/jobs/843df718-ec6e-4d49-9289-000000000000")
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.NotFound
     }
 

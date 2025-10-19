@@ -67,7 +67,7 @@ trait JobFixture:
   val berlinTechLeadJob: Job = Job(
     id = berlinTechLeadJobId,
     date = 1659186086L,
-    ownerEmail = "some@email.com",
+    ownerEmail = "jennifer@lawrence.com",
     jobInfo = berlinTechLeadJobInfo
   )
 

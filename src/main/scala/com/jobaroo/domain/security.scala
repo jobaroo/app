@@ -5,7 +5,7 @@ import cats.syntax.applicative.*
 import cats.syntax.semigroup.*
 import com.jobaroo.domain.user.{Role, User}
 import org.http4s.{Response, Status}
-import tsec.authentication.{AugmentedJWT, JWTAuthenticator, SecuredRequest}
+import tsec.authentication.{AugmentedJWT, JWTAuthenticator, SecuredRequest, SecuredRequestHandler}
 import tsec.authorization.BasicRBAC
 import tsec.mac.jca.HMACSHA256
 import tsec.authentication.TSecAuthService
@@ -15,11 +15,12 @@ import cats.kernel.Semigroup
 
 object security:
 
-  type Crypto              = HMACSHA256
-  type JwtToken            = AugmentedJWT[Crypto, String]
-  type Authenticator[F[_]] = JWTAuthenticator[F, String, User, Crypto]
-  type AuthRoute[F[_]]     = PartialFunction[SecuredRequest[F, User, JwtToken], F[Response[F]]]
-  type AuthRBAC[F[_]]      = BasicRBAC[F, Role, User, JwtToken]
+  type Crypto               = HMACSHA256
+  type JwtToken             = AugmentedJWT[Crypto, String]
+  type Authenticator[F[_]]  = JWTAuthenticator[F, String, User, Crypto]
+  type AuthRoute[F[_]]      = PartialFunction[SecuredRequest[F, User, JwtToken], F[Response[F]]]
+  type AuthRBAC[F[_]]       = BasicRBAC[F, Role, User, JwtToken]
+  type SecuredHandler[F[_]] = SecuredRequestHandler[F, String, User, JwtToken]
 
   def allRoles[F[_]: MonadThrow]: AuthRBAC[F]      = BasicRBAC.all[F, Role, User, JwtToken]
   def adminOnly[F[_]: MonadThrow]: AuthRBAC[F]     = BasicRBAC(Role.ADMIN)
