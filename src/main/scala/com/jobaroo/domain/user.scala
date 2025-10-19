@@ -1,6 +1,9 @@
 package com.jobaroo.domain
 
+import cats.Applicative
+import cats.syntax.applicative.*
 import doobie.util.meta.Meta
+import tsec.authorization.{AuthGroup, AuthorizationInfo, SimpleAuthEnum}
 
 object user:
 
@@ -19,3 +22,10 @@ object user:
   object Role:
 
     given Meta[Role] = Meta[String].imap(Role.valueOf)(_.toString)
+
+    given SimpleAuthEnum[Role, String] with
+      override protected val values: AuthGroup[Role] = AuthGroup(Role.ADMIN, Role.RECRUITER)
+      override def getRepr(role: Role): String = role.toString
+
+    given authRole[F[_] : Applicative]: AuthorizationInfo[F, Role, User] with
+      override def fetchInfo(u: User): F[Role] = u.role.pure[F]

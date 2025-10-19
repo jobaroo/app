@@ -67,6 +67,8 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
         else IO.pure(Left("Invalid password"))
       else IO.pure(Right(None))
 
+    override def delete(email: String): IO[Boolean] = IO.pure(true)
+      
     override def authenticator: Authenticator[IO] = mockAuthenticator
 
   extension (r: Request[IO])
@@ -181,6 +183,26 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
                         .withBearerToken(jwtToken)
                         .withEntity(NewPasswordInfo(jenniferLawrencePassword, "new_password"))
                     )
+      yield resp.status shouldBe Status.Ok
+    }
+
+    "should return a 401 - Unauthorized if a non-admin tries to delete a user"  in {
+      for
+        jwtToken <- mockAuthenticator.create(johnnyDepp.email)
+        resp <- authRoutes.orNotFound.run(
+          Request(method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+            .withBearerToken(jwtToken)
+        )
+      yield resp.status shouldBe Status.Unauthorized
+    }
+
+    "should return a 200 - Ok if an admin tries to delete a user" in {
+      for
+        jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
+        resp <- authRoutes.orNotFound.run(
+          Request(method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+            .withBearerToken(jwtToken)
+        )
       yield resp.status shouldBe Status.Ok
     }
 

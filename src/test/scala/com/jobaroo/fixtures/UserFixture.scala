@@ -30,7 +30,7 @@ trait UserFixture:
   val jenniferLawrence = User(
     email = "jennifer@lawrence.com",
     hashedPassword = "$2a$10$xQt8MazSRexmSWIDRz2hauTKehjhT9xKAzPim5AC1vN0SgMZBF7Uy", // pwd
-    role = Role.RECRUITER,
+    role = Role.ADMIN,
     firstName = Some("Jennifer"),
     lastName = Some("Lawrence"),
     company = Some("Meta")

@@ -7,6 +7,7 @@ import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.server.*
 import cats.*
+import cats.syntax.semigroup.*
 import cats.implicits.*
 import cats.effect.*
 import tsec.authentication.{asAuthed, SecuredRequestHandler, TSecAuthService}
@@ -18,6 +19,8 @@ import com.jobaroo.domain.user.User
 import com.jobaroo.core.Auth
 import com.jobaroo.http.response.FailureResponse
 import com.jobaroo.domain.auth.{LoginInfo, NewPasswordInfo, NewUserInfo}
+
+import scala.language.implicitConversions
 
 class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Http4sValidationDsl[F]:
 
@@ -78,10 +81,25 @@ class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Htt
       yield resp
   }
 
-  private val authedRoutes = securedHandler.liftService(TSecAuthService(changePasswordRoute.orElse(logoutRoute)))
+  // DELETE /auth/users/{email}
+  private val deleteRoute: AuthRoute[F] = {
+    case req @ DELETE -> Root / "users" / email asAuthed _ =>
+      auth.delete(email).flatMap {
+        case true  => Ok()
+        case false => NotFound()
+      }
+  }
+
+  private val unauthedRoutes = loginRoute <+> createUserRoute
+
+  private val authedRoutes = securedHandler.liftService(
+    changePasswordRoute.restrictedTo(allRoles) |+|
+      logoutRoute.restrictedTo(allRoles) |+|
+      deleteRoute.restrictedTo(adminOnly)
+  )
 
   val routes = Router(
-    "/auth" -> (loginRoute <+> createUserRoute <+> authedRoutes)
+    "/auth" -> (unauthedRoutes <+> authedRoutes)
   )
 
 object AuthRoutes:

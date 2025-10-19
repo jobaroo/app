@@ -1,7 +1,5 @@
-CREATE
-DATABASE board;
-\c
-board;
+CREATE DATABASE board;
+\c board;
 
 CREATE TABLE jobs
 (
