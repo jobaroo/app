@@ -42,9 +42,9 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
 
   private val mockAuth: Auth[IO] = new Auth[IO]:
 
-    override def login(email: String, password: String): IO[Option[JwtToken]] =
+    override def login(email: String, password: String): IO[Option[User]] =
       if email == jenniferLawrence.email && password == jenniferLawrencePassword then
-        mockAuthenticator.create(jenniferLawrence.email).map(Some(_))
+        IO.pure(Some(jenniferLawrence))
       else IO.pure(None)
 
     override def signUp(newUserInfo: NewUserInfo): IO[Option[User]] =
@@ -57,15 +57,13 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       else IO.pure(Right(None))
 
     override def delete(email: String): IO[Boolean] = IO.pure(true)
-      
-    override def authenticator: Authenticator[IO] = mockAuthenticator
-
+    
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
   ////////////////////////////////////////////////////////////////////////////////////
 
   given Logger[IO]               = Slf4jLogger.getLogger[IO]
-  val authRoutes: HttpRoutes[IO] = AuthRoutes[IO](mockAuth).routes
+  val authRoutes: HttpRoutes[IO] = AuthRoutes[IO](mockAuth, mockAuthenticator).routes
 
   "AuthRoutes" - {
     "should return a 401 - unauthorized if login fails" in {

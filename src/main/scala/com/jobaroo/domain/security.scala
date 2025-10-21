@@ -22,6 +22,9 @@ object security:
   type AuthRBAC[F[_]]       = BasicRBAC[F, Role, User, JwtToken]
   type SecuredHandler[F[_]] = SecuredRequestHandler[F, String, User, JwtToken]
 
+  object SecuredHandler:
+    def apply[F[_]](using handler: SecuredHandler[F]): SecuredHandler[F] = handler
+  
   def allRoles[F[_]: MonadThrow]: AuthRBAC[F]      = BasicRBAC.all[F, Role, User, JwtToken]
   def adminOnly[F[_]: MonadThrow]: AuthRBAC[F]     = BasicRBAC(Role.ADMIN)
   def recruiterOnly[F[_]: MonadThrow]: AuthRBAC[F] = BasicRBAC(Role.RECRUITER)

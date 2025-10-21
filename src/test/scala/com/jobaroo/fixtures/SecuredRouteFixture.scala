@@ -14,6 +14,9 @@ import tsec.jws.mac.JWTMac
 import com.jobaroo.domain.security.Crypto
 import org.http4s.*
 import org.http4s.headers.*
+import tsec.authentication.SecuredRequest
+import tsec.authentication.SecuredRequestHandler
+import com.jobaroo.domain.security.SecuredHandler
 
 trait SecuredRouteFixture extends UserFixture with JobFixture:
 
@@ -27,12 +30,15 @@ trait SecuredRouteFixture extends UserFixture with JobFixture:
       identityStore = idStore,
       signingKey = HMACSHA256.unsafeGenerateKey
     )
-
+  
+  given securedHandler: SecuredHandler[IO] = SecuredRequestHandler(mockAuthenticator)
+  
 object SecuredRouteFixture:
-
+  
   extension (r: Request[IO])
 
     def withBearerToken(jwtToken: JwtToken): Request[IO] = r.putHeaders {
       val jwtString = JWTMac.toEncodedString[IO, Crypto](jwtToken.jwt)
       Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
     }
+    

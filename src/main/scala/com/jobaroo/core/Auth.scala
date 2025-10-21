@@ -31,25 +31,20 @@ import com.jobaroo.config.SecurityConfig
 
 trait Auth[F[_]]:
 
-  def login(email: String, password: String): F[Option[JwtToken]]
+  def login(email: String, password: String): F[Option[User]]
   def signUp(newUserInfo: NewUserInfo): F[Option[User]]
   def changePassword(email: String, newPasswordInfo: NewPasswordInfo): F[Either[String, Option[User]]]
-  def authenticator: Authenticator[F]
   def delete(email: String): F[Boolean]
 
-final class LiveAuth[F[_] : Async : Logger] private (
-  val users                 : Users[F],
-  override val authenticator: Authenticator[F]
-) extends Auth[F]:
+final class LiveAuth[F[_] : Async : Logger] private (val users: Users[F]) extends Auth[F]:
 
-  override def login(email: String, password: String): F[Option[JwtToken]] =
+  override def login(email: String, password: String): F[Option[User]] =
     for
       optUser       <- users.find(email)
       validatedUser <- optUser.filterA { user =>
                          BCrypt.checkpwBool[F](password, PasswordHash[BCrypt](user.hashedPassword))
                        }
-      optJwtToken   <- validatedUser.traverse { user => authenticator.create(user.email) }
-    yield optJwtToken
+    yield validatedUser
 
   override def signUp(newUserInfo: NewUserInfo): F[Option[User]] =
     for
@@ -97,25 +92,4 @@ final class LiveAuth[F[_] : Async : Logger] private (
 
 object LiveAuth:
 
-  def apply[F[_] : Async : Logger](users: Users[F], securityConfig: SecurityConfig): F[LiveAuth[F]] =
-    val refF: F[Ref[F, Map[SecureRandomId, JwtToken]]] = Ref.of[F, Map[SecureRandomId, JwtToken]](Map.empty)
-    val keyF                                           = HMACSHA256.buildKey[F](securityConfig.secret.getBytes("UTF-8"))
-
-    for
-      ref <- refF
-      tokenStore = new BackingStore[F, SecureRandomId, JwtToken]:
-
-                     override def delete(id: SecureRandomId): F[Unit]           = ref.modify(store => (store - id, ()))
-                     override def get(id: SecureRandomId): OptionT[F, JwtToken] = OptionT(ref.get.map(_.get(id)))
-                     override def update(e: JwtToken): F[JwtToken]              = put(e)
-                     override def put(e: JwtToken): F[JwtToken]                 = ref.modify(store => (store + (e.id -> e), e))
-
-      key <- keyF
-      authenticator = JWTAuthenticator.backed.inBearerToken(
-                        expiryDuration = securityConfig.jwtExpiryDuration,
-                        maxIdle = None,
-                        tokenStore = tokenStore,
-                        identityStore = email => OptionT(users.find(email)),
-                        signingKey = key
-                      )
-    yield new LiveAuth[F](users, authenticator)
+  def apply[F[_] : Async : Logger](users: Users[F]): F[LiveAuth[F]] = new LiveAuth[F](users).pure[F]

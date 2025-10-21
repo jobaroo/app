@@ -54,7 +54,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
   ////////////////////////////////////////////////////////////////////////////////////
 
   given Logger[IO]              = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs, mockAuthenticator).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {

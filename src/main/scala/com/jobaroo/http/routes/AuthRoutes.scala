@@ -22,28 +22,28 @@ import com.jobaroo.domain.auth.{LoginInfo, NewPasswordInfo, NewUserInfo}
 
 import scala.language.implicitConversions
 
-class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Http4sValidationDsl[F]:
+class AuthRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (
+  auth          : Auth[F],
+  authenticator : Authenticator[F]
+) extends Http4sValidationDsl[F]:
 
-  private val securedHandler: SecuredHandler[F] = SecuredRequestHandler(auth.authenticator)
-
-  // POST /auth/login { loginInfo } => 200 Authorization: Bearer (jwt)
   private val loginRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "login" =>
       req.validate[LoginInfo] { loginInfo =>
         val optJwtToken =
           for
-            optJwtToken <- auth.login(loginInfo.email, loginInfo.password)
-            _           <- Logger[F].info(s"user logging: ${loginInfo.email}")
+            validatedUser <- auth.login(loginInfo.email, loginInfo.password)
+            _             <- Logger[F].info(s"user logging: ${loginInfo.email}")
+            optJwtToken   <- validatedUser.traverse { user => authenticator.create(user.email) }
           yield optJwtToken
 
         optJwtToken.map {
-          case Some(jwtToken) => auth.authenticator.embed(Response(Status.Ok), jwtToken)
+          case Some(jwtToken) => authenticator.embed(Response(Status.Ok), jwtToken)
           case None           => Response(Status.Unauthorized)
         }
       }
   }
 
-  // POST /auth/users { newUserInfo } => 201 Created or BadRequest
   private val createUserRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "users" =>
       req.validate[NewUserInfo] { newUserInfo =>
@@ -56,7 +56,6 @@ class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Htt
       }
   }
 
-  // PUT /auth/users/password { newPasswordInfo } { Authorization: Bearer {jwt}} => 200 OK
   private val changePasswordRoute: AuthRoute[F] = {
     case req @ PUT -> Root / "users" / "password" asAuthed user =>
       req.request.validate[NewPasswordInfo] { newPasswordInfo =>
@@ -70,17 +69,15 @@ class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Htt
       }
   }
 
-  // POST /auth/logout { Authorization: Bearer {jwt}} => 200 OK
   private val logoutRoute: AuthRoute[F] = {
     case req @ POST -> Root / "logout" asAuthed _ =>
       val token = req.authenticator
       for
-        _    <- auth.authenticator.discard(token)
+        _    <- authenticator.discard(token)
         resp <- Ok()
       yield resp
   }
 
-  // DELETE /auth/users/{email}
   private val deleteRoute: AuthRoute[F] = {
     case req @ DELETE -> Root / "users" / email asAuthed _ =>
       auth.delete(email).flatMap {
@@ -91,7 +88,7 @@ class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Htt
 
   private val unauthedRoutes = loginRoute <+> createUserRoute
 
-  private val authedRoutes = securedHandler.liftService(
+  private val authedRoutes = SecuredHandler[F].liftService(
     changePasswordRoute.restrictedTo(allRoles) |+|
       logoutRoute.restrictedTo(allRoles) |+|
       deleteRoute.restrictedTo(adminOnly)
@@ -102,4 +99,9 @@ class AuthRoutes[F[_] : Concurrent : Logger] private (auth: Auth[F]) extends Htt
   )
 
 object AuthRoutes:
-  def apply[F[_] : Concurrent : Logger](auth: Auth[F]): AuthRoutes[F] = new AuthRoutes[F](auth)
+
+  def apply[F[_] : Concurrent : Logger : SecuredHandler](
+    auth: Auth[F],
+    authenticator: Authenticator[F]
+  ): AuthRoutes[F] =
+    new AuthRoutes[F](auth, authenticator)

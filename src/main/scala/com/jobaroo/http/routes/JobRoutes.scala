@@ -27,10 +27,8 @@ import tsec.authentication.SecuredRequestHandler
 
 import scala.language.implicitConversions
 
-class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F], authenticator: Authenticator[F])
+class JobRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (jobs: Jobs[F])
   extends Http4sValidationDsl[F]:
-
-  private val securedHandler: SecuredHandler[F] = SecuredRequestHandler(authenticator)
 
   object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
   object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
@@ -83,7 +81,7 @@ class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F], authenticato
 
   private val unauthedRoutes = allJobsRoute <+> findJobRoute
 
-  private val authedRoutes = securedHandler.liftService(
+  private val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|
       deleteJobRoute.restrictedTo(allRoles)
@@ -95,5 +93,5 @@ class JobRoutes[F[_] : Concurrent : Logger] private (jobs: Jobs[F], authenticato
 
 object JobRoutes:
 
-  def apply[F[_] : Concurrent : Logger](jobs: Jobs[F], authenticator: Authenticator[F]): JobRoutes[F] =
-    new JobRoutes[F](jobs, authenticator)
+  def apply[F[_] : Concurrent : Logger : SecuredHandler](jobs: Jobs[F]): JobRoutes[F] =
+    new JobRoutes[F](jobs)
