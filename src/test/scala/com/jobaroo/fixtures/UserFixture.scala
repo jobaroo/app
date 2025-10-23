@@ -2,6 +2,9 @@ package com.jobaroo.fixtures
 
 import com.jobaroo.domain.user.*
 import com.jobaroo.domain.user.Role.RECRUITER
+import com.jobaroo.core.Users
+import cats.effect.IO
+import cats.syntax.all.*
 
 trait UserFixture:
 
@@ -35,3 +38,12 @@ trait UserFixture:
     lastName = Some("Lawrence"),
     company = Some("Meta")
   )
+
+  val mockedUsers: Users[IO] = new Users[IO]:
+
+    override def find(email: String): IO[Option[User]] =
+      if email == christopherNolan.email then IO.pure(christopherNolan.some) else IO.pure(None)
+
+    override def create(user: User): IO[String]       = IO.pure(user.email)
+    override def update(user: User): IO[Option[User]] = IO.pure(user.some)
+    override def delete(email: String): IO[Boolean]   = IO.pure(true)

@@ -28,15 +28,6 @@ import com.jobaroo.config.SecurityConfig
 class AuthSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with UserFixture:
 
   given Logger[IO] = Slf4jLogger.getLogger[IO]
-
-  private val mockedUsers: Users[IO] = new Users[IO]:
-
-    override def find(email: String): IO[Option[User]] =
-      if email == christopherNolan.email then IO.pure(christopherNolan.some) else IO.pure(None)
-
-    override def create(user: User): IO[String]       = IO.pure(user.email)
-    override def update(user: User): IO[Option[User]] = IO.pure(user.some)
-    override def delete(email: String): IO[Boolean]   = IO.pure(true)
     
   "Auth 'algebra'" - {
     "login should return None if the user doesn't exist" in {
