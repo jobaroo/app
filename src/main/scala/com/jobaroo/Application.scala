@@ -23,11 +23,11 @@ case object Application extends IOApp.Simple:
   given Logger[IO] = Slf4jLogger.getLogger[IO]
 
   override def run: IO[Unit] = ConfigSource.default.loadF[IO, AppConfig].flatMap {
-    case AppConfig(postgresConfig, emberConfig, securityConfig) =>
+    case AppConfig(postgresConfig, emberConfig, securityConfig, tokenConfig, emailServiceConfig) =>
       val app =
         for
           xa      <- Database.makePostgresResource[IO](postgresConfig)
-          core    <- Core[IO](xa)
+          core    <- Core[IO](xa, tokenConfig, emailServiceConfig)
           httpApi <- HttpApi[IO](core, securityConfig)
           server  <- EmberServerBuilder
                        .default[IO]

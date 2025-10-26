@@ -19,3 +19,6 @@ object auth:
     lastName : Option[String],
     company  : Option[String]
   )
+
+  final case class ForgottenPasswordInfo(email: String)
+  final case class RecoverPasswordInfo(email: String, token: String, newPassword: String)

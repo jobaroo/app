@@ -33,6 +33,8 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.BCrypt
 import com.jobaroo.fixtures.SecuredRouteFixture.withBearerToken
 import scala.concurrent.duration.*
+import com.jobaroo.domain.auth.ForgottenPasswordInfo
+import com.jobaroo.domain.auth.RecoverPasswordInfo
 
 class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with SecuredRouteFixture:
 
@@ -40,7 +42,9 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
   // prep
   ////////////////////////////////////////////////////////////////////////////////////
 
-  private val mockAuth: Auth[IO] = new Auth[IO]:
+  private val mockAuth: Auth[IO] = probedAuth(None)
+
+  private def probedAuth(optUsers: Option[Ref[IO, Map[String, String]]]): Auth[IO] = new Auth[IO]:
 
     override def login(email: String, password: String): IO[Option[User]] =
       if email == jenniferLawrence.email && password == jenniferLawrencePassword then
@@ -57,7 +61,15 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       else IO.pure(Right(None))
 
     override def delete(email: String): IO[Boolean] = IO.pure(true)
-    
+
+    override def recoverPasswordFromToken(email: String, token: String, newPassword: String): IO[Boolean] =
+      optUsers.traverse { ref => ref.get.map { map => map.get(email).filter(_ == token) }.map(_.nonEmpty) }.map(
+        _.getOrElse(false)
+      )
+
+    override def sendPasswordRecoveryToken(email: String): IO[Unit] =
+      optUsers.traverse { ref => ref.modify { map => (map + (email -> "abc"), ()) } }.map(_ => ())
+
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
   ////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +136,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
         resp     <- authRoutes.orNotFound.run(
-          Request[IO](method = Method.POST, uri = uri"/auth/logout").withBearerToken(jwtToken)
+                      Request[IO](method = Method.POST, uri = uri"/auth/logout").withBearerToken(jwtToken)
                     )
       yield resp.status shouldBe Status.Ok
     }
@@ -166,24 +178,65 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
       yield resp.status shouldBe Status.Ok
     }
 
-    "should return a 401 - Unauthorized if a non-admin tries to delete a user"  in {
+    "should return a 401 - Unauthorized if a non-admin tries to delete a user" in {
       for
         jwtToken <- mockAuthenticator.create(johnnyDepp.email)
-        resp <- authRoutes.orNotFound.run(
-          Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
-            .withBearerToken(jwtToken)
-        )
+        resp     <- authRoutes.orNotFound.run(
+                      Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.Unauthorized
     }
 
     "should return a 200 - Ok if an admin tries to delete a user" in {
       for
         jwtToken <- mockAuthenticator.create(jenniferLawrence.email)
-        resp <- authRoutes.orNotFound.run(
-          Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
-            .withBearerToken(jwtToken)
-        )
+        resp     <- authRoutes.orNotFound.run(
+                      Request[IO](method = Method.DELETE, uri = uri"/auth/users/jennifer@lawrence.com")
+                        .withBearerToken(jwtToken)
+                    )
       yield resp.status shouldBe Status.Ok
     }
 
+    "should return a 200 - Ok when resetting a password and an email should be triggered" in {
+      for
+        usersRef <- IO.ref(Map.empty[String, String])
+        auth   = probedAuth(Some(usersRef))
+        routes = AuthRoutes[IO](auth, mockAuthenticator).routes
+        resp    <- routes.orNotFound.run(
+                     Request[IO](method = Method.POST, uri = uri"/auth/reset")
+                       .withEntity(ForgottenPasswordInfo(christopherNolan.email))
+                   )
+        userMap <- usersRef.get
+      yield
+        resp.status shouldBe Status.Ok
+        userMap shouldBe Map(christopherNolan.email -> "abc")
+    }
+
+    "should return a 200 - Ok when recovering a password for a correct user/token combination" in {
+      for
+        usersRef <- IO.ref(Map(christopherNolan.email -> "abc"))
+        auth   = probedAuth(Some(usersRef))
+        routes = AuthRoutes[IO](auth, mockAuthenticator).routes
+        resp    <- routes.orNotFound.run(
+                     Request[IO](method = Method.POST, uri = uri"/auth/recover")
+                       .withEntity(RecoverPasswordInfo(christopherNolan.email, "abc", "new_password"))
+                   )
+        userMap <- usersRef.get
+      yield resp.status shouldBe Status.Ok
+    }
+
+    "should return a 403 - Forbidden when recovering a password for a user with an incorrect token" in {
+      for
+        usersRef <- IO.ref(Map(christopherNolan.email -> "abc"))
+        auth   = probedAuth(Some(usersRef))
+        routes = AuthRoutes[IO](auth, mockAuthenticator).routes
+        resp    <- routes.orNotFound.run(
+                     Request[IO](method = Method.POST, uri = uri"/auth/recover")
+                       .withEntity(RecoverPasswordInfo(christopherNolan.email, "wrong_token", "new_password"))
+                   )
+        userMap <- usersRef.get
+      yield resp.status shouldBe Status.Forbidden
+    }
+    
   }

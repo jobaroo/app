@@ -21,10 +21,12 @@ import com.jobaroo.http.response.FailureResponse
 import com.jobaroo.domain.auth.{LoginInfo, NewPasswordInfo, NewUserInfo}
 
 import scala.language.implicitConversions
+import com.jobaroo.domain.auth.ForgottenPasswordInfo
+import com.jobaroo.domain.auth.RecoverPasswordInfo
 
 class AuthRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (
-  auth          : Auth[F],
-  authenticator : Authenticator[F]
+  auth         : Auth[F],
+  authenticator: Authenticator[F]
 ) extends Http4sValidationDsl[F]:
 
   private val loginRoute: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -54,6 +56,28 @@ class AuthRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (
                        case None       => BadRequest(s"User with email: ${newUserInfo.email} already exists.")
         yield resp
       }
+  }
+
+  private val forgottenPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "reset" =>
+      for
+        forgottenPasswordInfo <- req.as[ForgottenPasswordInfo]
+        _                     <- auth.sendPasswordRecoveryToken(forgottenPasswordInfo.email)
+        resp                  <- Ok()
+      yield resp
+  }
+
+  private val recoverPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "recover" =>
+      for
+        recoverPasswordInfo <- req.as[RecoverPasswordInfo]
+        recovery            <- auth.recoverPasswordFromToken(
+                                 recoverPasswordInfo.email,
+                                 recoverPasswordInfo.token,
+                                 recoverPasswordInfo.newPassword
+                               )
+        resp                <- if recovery then Ok() else Forbidden(FailureResponse("Combination of email/token is incorrect"))
+      yield resp
   }
 
   private val changePasswordRoute: AuthRoute[F] = {
@@ -86,7 +110,7 @@ class AuthRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (
       }
   }
 
-  private val unauthedRoutes = loginRoute <+> createUserRoute
+  private val unauthedRoutes = loginRoute <+> createUserRoute <+> forgottenPasswordRoute <+> recoverPasswordRoute
 
   private val authedRoutes = SecuredHandler[F].liftService(
     changePasswordRoute.restrictedTo(allRoles) |+|
