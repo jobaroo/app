@@ -1,3 +1,3 @@
 import { JobarooApp } from './target/scala-3.2.1/app-fastopt.js'
 
-JobarooApp().doSomething("app")
+JobarooApp().launch("app")
