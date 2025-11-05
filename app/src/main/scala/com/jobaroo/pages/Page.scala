@@ -14,6 +14,13 @@ abstract class Page:
 
 object Page:
 
+  trait Msg
+
+  enum Kind:
+    case SUCCESS, ERROR, LOADING
+
+  final case class Status(message: String, kind: Kind)
+
   object urls:
 
     val login           = "/login"
@@ -32,6 +39,3 @@ object Page:
     case urls.`empty` | urls.`home` | urls.`jobs` => JobListPage()
     case s"/jobs/$id"                             => JobPage(id)
     case _                                        => NotFoundPage()
-
-  enum Msg:
-    case A

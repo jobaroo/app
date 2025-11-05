@@ -11,10 +11,12 @@ import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.*
+import org.http4s.server.middleware.CORS
 import pureconfig.ConfigSource
 import pureconfig.error.ConfigReaderException
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.http4s.server.middleware.CORS
 
 case object Application extends IOApp.Simple:
 
@@ -33,7 +35,7 @@ case object Application extends IOApp.Simple:
                        .default[IO]
                        .withHost(emberConfig.host)
                        .withPort(emberConfig.port)
-                       .withHttpApp(httpApi.endpoints.orNotFound)
+                       .withHttpApp(CORS(httpApi.endpoints).orNotFound) // TODO - change CORS settings
                        .build
         yield server
 
