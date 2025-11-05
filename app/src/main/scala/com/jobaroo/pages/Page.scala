@@ -3,18 +3,17 @@ package com.jobaroo.pages
 import tyrian.*
 import cats.effect.*
 import com.jobaroo.pages.Page.urls.login
+import com.jobaroo.App
 
 abstract class Page:
 
   import Page.*
 
-  def initCmd: Cmd[IO, Msg]
-  def update(msg: Msg): (Page, Cmd[IO, Msg])
-  def view: Html[Msg]
+  def initCmd: Cmd[IO, App.Msg]
+  def update(msg: App.Msg): (Page, Cmd[IO, App.Msg])
+  def view: Html[App.Msg]
 
 object Page:
-
-  trait Msg
 
   enum Kind:
     case SUCCESS, ERROR, LOADING

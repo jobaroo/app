@@ -32,7 +32,7 @@ object Header:
         "click",
         e =>
           e.preventDefault()
-          Router.Msg.ChangeLocation("/")
+          Router.ChangeLocation("/")
       )
     )(img(`class` := "home-logo", src := logoImage, alt := "Jobaroo"))
 
@@ -45,7 +45,7 @@ object Header:
           "click",
           e =>
             e.preventDefault()
-            Router.Msg.ChangeLocation(location)
+            Router.ChangeLocation(location)
         )
       )(text)
     )

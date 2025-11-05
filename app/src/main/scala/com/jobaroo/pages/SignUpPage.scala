@@ -13,6 +13,7 @@ import com.jobaroo.pages.Page.Status
 import com.jobaroo.pages.Page.Kind
 import com.jobaroo.domain.auth.*
 import com.jobaroo.common.Endpoint
+import com.jobaroo.App
 
 final case class SignUpPage(
   email          : String = "",
@@ -26,9 +27,9 @@ final case class SignUpPage(
 
   import SignUpPage.*
 
-  override def initCmd: Cmd[IO, Page.Msg] = Cmd.None
+  override def initCmd: Cmd[IO, App.Msg] = Cmd.None
 
-  override def update(msg: Page.Msg): (Page, Cmd[IO, Page.Msg]) = msg match
+  override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)                     => (this.copy(email = email), Cmd.None)
     case UpdatePassword(password)               => (this.copy(password = password), Cmd.None)
     case UpdateConfirmPassword(confirmPassword) => (this.copy(confirmPassword = confirmPassword), Cmd.None)
@@ -52,7 +53,7 @@ final case class SignUpPage(
     case SignUpSuccess(message)                 => (setSuccessStatus(message), Cmd.None)
     case NoOp                                   => (this, Cmd.None)
 
-  override def view: Html[Page.Msg] =
+  override def view: Html[App.Msg] =
     div(`class` := "form-section")(
       div(`class` := "top-section")(
         h1("Sign Up")
@@ -89,7 +90,7 @@ final case class SignUpPage(
 
 object SignUpPage:
 
-  trait Msg                                                       extends Page.Msg
+  trait Msg                                                       extends App.Msg
   final case class UpdatePassword(password: String)               extends Msg
   final case class UpdateConfirmPassword(confirmPassword: String) extends Msg
   final case class UpdateEmail(email: String)                     extends Msg

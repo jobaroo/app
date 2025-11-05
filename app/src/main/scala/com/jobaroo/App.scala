@@ -21,24 +21,29 @@ class App extends TyrianApp[App.Msg, App.Model]:
     val page                = Page(location)
     val pageCmd             = page.initCmd
     val (router, routerCmd) = Router.startAt(location)
-    (Model(router, page), routerCmd |+| pageCmd)
+    val session             = Session()
+    val sessionCmd          = session.initCmd
+    (Model(router, page, session), routerCmd |+| pageCmd |+| sessionCmd)
 
   override def subscriptions(model: Model): Sub[IO, Msg] =
     Sub.make(
       "urlChange",
-      model.router.history.state.discrete.map(_.get).map(newLocation => Router.Msg.ChangeLocation(newLocation, true))
+      model.router.history.state.discrete.map(_.get).map(newLocation => Router.ChangeLocation(newLocation, true))
     )
 
   override def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
-    case msg: Router.Msg =>
+    case msg: Router.Msg  =>
       val (newRouter, newRouterCmd) = model.router.update(msg)
       if model.router == newRouter then
         (model, Cmd.None)
       else
         val newPage    = Page(newRouter.location)
         val newPageCmd = newPage.initCmd
-        (Model(newRouter, newPage), newRouterCmd |+| newPageCmd)
-    case msg: Page.Msg   =>
+        (model.copy(router = newRouter, page = newPage), newRouterCmd |+| newPageCmd)
+    case msg: Session.Msg =>
+      val (newSession, newSessionCmd) = model.session.update(msg)
+      (model.copy(session = newSession), newSessionCmd)
+    case msg: App.Msg     =>
       val (newPage, cmd) = model.page.update(msg)
       (model.copy(page = newPage), cmd)
 
@@ -50,6 +55,5 @@ class App extends TyrianApp[App.Msg, App.Model]:
 
 object App:
 
-  type Msg = Router.Msg | Page.Msg
-
-  final case class Model(router: Router, page: Page)
+  trait Msg
+  final case class Model(router: Router, page: Page, session: Session)

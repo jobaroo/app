@@ -3,11 +3,11 @@ package com.jobaroo.core
 import tyrian.*
 import cats.effect.*
 import fs2.dom.History
+import com.jobaroo.App
 
 final case class Router private (location: String, history: History[IO, String]):
 
   import Router.*
-  import Router.Msg.*
 
   def update(msg: Msg): (Router, Cmd[IO, Msg]) = msg match
     case ChangeLocation(newLocation, browserTriggered) if location == newLocation | browserTriggered => (this, Cmd.None)
@@ -20,9 +20,8 @@ final case class Router private (location: String, history: History[IO, String])
 
 object Router:
 
-  enum Msg:
-
-    case ChangeLocation(location: String, browserTriggered: Boolean = false)
-    case ExternalRedirect(location: String)
+  trait Msg                                                                            extends App.Msg
+  final case class ChangeLocation(location: String, browserTriggered: Boolean = false) extends Msg
+  final case class ExternalRedirect(location: String)                                  extends Msg
 
   def startAt(initialLocation: String): (Router, Cmd[IO, Msg]) = (Router(initialLocation, History[IO, String]), Cmd.None)

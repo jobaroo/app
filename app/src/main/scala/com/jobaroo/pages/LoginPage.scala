@@ -12,18 +12,20 @@ import com.jobaroo.pages.Page.Kind
 import com.jobaroo.common.constants
 import com.jobaroo.domain.auth.*
 import com.jobaroo.common.Endpoint
+import com.jobaroo.core.Session
+import com.jobaroo.App
 
 final case class LoginPage(email: String = "", password: String = "", status: Option[Status] = None) extends Page:
 
   import LoginPage.*
 
-  override def initCmd: Cmd[IO, Page.Msg] = Cmd.None
+  override def initCmd: Cmd[IO, App.Msg] = Cmd.None
 
-  override def update(msg: Page.Msg): (Page, Cmd[IO, Page.Msg]) = msg match
+  override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)       => (this.copy(email = email), Cmd.None)
     case UpdatePassword(password) => (this.copy(password = password), Cmd.None)
     case LoginError(message)      => (setErrorStatus(message), Cmd.None)
-    case LoginSuccess(token)      => (setSuccessStatus(token), Cmd.None)
+    case LoginSuccess(token)      => (setSuccessStatus("Login successful"), Cmd.Emit(Session.SetToken(email, token)))
     case Login                    =>
       if !email.matches(constants.emailRegex) then (setErrorStatus("Email is invalid"), Cmd.None)
       else if password.isEmpty then (setErrorStatus("Please enter a password"), Cmd.None)
@@ -32,7 +34,7 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
         (this, commands.login(loginInfo))
     case NoOp                     => (this, Cmd.None)
 
-  override def view: Html[Page.Msg] =
+  override def view: Html[App.Msg] =
     div(`class` := "form-section")(
       div(`class` := "top-section")(
         h1("Log In")
@@ -65,7 +67,7 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
 
 object LoginPage:
 
-  trait Msg                                         extends Page.Msg
+  trait Msg                                         extends App.Msg
   final case class UpdatePassword(password: String) extends Msg
   final case class UpdateEmail(email: String)       extends Msg
   final case class LoginError(message: String)      extends Msg
