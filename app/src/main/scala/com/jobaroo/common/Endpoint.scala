@@ -6,7 +6,7 @@ import io.circe.Encoder
 import io.circe.syntax.*
 import cats.effect.IO
 
-trait Endpoint[M](location: String, method: Method, onSuccess: Response => M, onError: HttpError => M):
+trait Endpoint[M](location: String, method: Method, onResponse: Response => M, onError: HttpError => M):
 
   def call[A: Encoder](payload: A): Cmd[IO, M] =
     Http.send(
@@ -18,5 +18,5 @@ trait Endpoint[M](location: String, method: Method, onSuccess: Response => M, on
         timeout = Request.DefaultTimeOut,
         withCredentials = false
       ),
-      Decoder[M](onError = onError(_), onResponse = onSuccess(_))
+      Decoder[M](onError = onError(_), onResponse = onResponse(_))
     )

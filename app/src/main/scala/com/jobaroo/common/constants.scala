@@ -8,3 +8,4 @@ object constants:
   object endpoints:
     val root = "http://localhost:8080"
     val signUp = s"$root/api/auth/users"
+    val login = s"$root/api/auth/login"

@@ -101,13 +101,13 @@ object SignUpPage:
   final case class SignUpError(message: String)                   extends Msg
   final case class SignUpSuccess(message: String)                 extends Msg
 
-  object endpooints:
+  object endpoints:
 
     val signup = new Endpoint[Msg](
       location = constants.endpoints.signUp,
       method = Method.Post,
       onError = e => SignUpError(e.toString),
-      onSuccess = resp =>
+      onResponse = resp =>
         resp.status match
           case tyrian.http.Status(201, _)                      => SignUpSuccess("Success! Log in now.")
           case tyrian.http.Status(s, _) if s >= 400 && s < 500 =>
@@ -118,4 +118,4 @@ object SignUpPage:
 
   object commands:
 
-    def signup(newUserInfo: NewUserInfo): Cmd[IO, Msg] = endpooints.signup.call(newUserInfo)
+    def signup(newUserInfo: NewUserInfo): Cmd[IO, Msg] = endpoints.signup.call(newUserInfo)
