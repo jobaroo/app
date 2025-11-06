@@ -29,6 +29,7 @@ object Page:
     val recoverPassword = "/recover-password"
     val empty           = ""
     val home            = "/"
+    val hash            = "#"
 
   def apply(location: String): Page = location match
     case urls.`login`                             => LoginPage()
