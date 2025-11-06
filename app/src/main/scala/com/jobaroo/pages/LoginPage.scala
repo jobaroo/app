@@ -25,7 +25,8 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
     case UpdateEmail(email)       => (this.copy(email = email), Cmd.None)
     case UpdatePassword(password) => (this.copy(password = password), Cmd.None)
     case LoginError(message)      => (setErrorStatus(message), Cmd.None)
-    case LoginSuccess(token)      => (setSuccessStatus("Login successful"), Cmd.Emit(Session.SetToken(email, token)))
+    case LoginSuccess(token)      =>
+      (setSuccessStatus("Login successful"), Cmd.Emit(Session.SetToken(email, token, isNewUser = true)))
     case Login                    =>
       if !email.matches(constants.emailRegex) then (setErrorStatus("Email is invalid"), Cmd.None)
       else if password.isEmpty then (setErrorStatus("Please enter a password"), Cmd.None)
