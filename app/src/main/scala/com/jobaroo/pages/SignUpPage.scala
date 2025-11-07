@@ -14,6 +14,7 @@ import com.jobaroo.pages.Page.Kind
 import com.jobaroo.domain.auth.*
 import com.jobaroo.common.Endpoint
 import com.jobaroo.App
+import com.jobaroo.pages.FormPage
 
 final case class SignUpPage(
   email          : String = "",
@@ -23,11 +24,9 @@ final case class SignUpPage(
   lastName       : String = "",
   company        : String = "",
   status         : Option[Status] = None
-) extends Page:
+) extends FormPage("Sign Up", status):
 
   import SignUpPage.*
-
-  override def initCmd: Cmd[IO, App.Msg] = Cmd.None
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)                     => (this.copy(email = email), Cmd.None)
@@ -51,39 +50,16 @@ final case class SignUpPage(
         (this, commands.signup(newUserInfo))
     case SignUpError(message)                   => (setErrorStatus(message), Cmd.None)
     case SignUpSuccess(message)                 => (setSuccessStatus(message), Cmd.None)
-    case NoOp                                   => (this, Cmd.None)
 
-  override def view: Html[App.Msg] =
-    div(`class` := "form-section")(
-      div(`class` := "top-section")(
-        h1("Sign Up")
-      ),
-      form(
-        name    := "sign-in",
-        `class` := "form",
-        onEvent(
-          "submit",
-          e =>
-            e.preventDefault()
-            NoOp
-        )
-      )(
-        renderInput("Email", "email", "text", true, UpdateEmail(_)),
-        renderInput("Password", "password", "password", true, UpdatePassword(_)),
-        renderInput("Confirm Password", "confirm-password", "password", true, UpdateConfirmPassword(_)),
-        renderInput("First Name", "first-name", "text", false, UpdateFirstName(_)),
-        renderInput("Last Name", "last-name", "text", false, UpdateLastName(_)),
-        renderInput("Company", "company", "text", false, UpdateCompany(_)),
-        button(`type` := "button", onClick(SignUp))("Sign Up"),
-        status.fold(div())(s => div(s.message))
-      )
-    )
-
-  private def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => Msg) =
-    div(`class` := "form-input")(
-      label(`for` := name, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
-      input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
-    )
+  override def renderFormContent(): List[Html[App.Msg]] = List(
+    renderInput("Email", "email", "text", true, UpdateEmail(_)),
+    renderInput("Password", "password", "password", true, UpdatePassword(_)),
+    renderInput("Confirm Password", "confirm-password", "password", true, UpdateConfirmPassword(_)),
+    renderInput("First Name", "first-name", "text", false, UpdateFirstName(_)),
+    renderInput("Last Name", "last-name", "text", false, UpdateLastName(_)),
+    renderInput("Company", "company", "text", false, UpdateCompany(_)),
+    button(`type` := "button", onClick(SignUp))("Sign Up")
+  )
 
   private def setErrorStatus(message: String): SignUpPage   = this.copy(status = Some(Status(message, Kind.ERROR)))
   private def setSuccessStatus(message: String): SignUpPage = this.copy(status = Some(Status(message, Kind.SUCCESS)))
@@ -98,7 +74,6 @@ object SignUpPage:
   final case class UpdateLastName(lastName: String)               extends Msg
   final case class UpdateCompany(company: String)                 extends Msg
   case object SignUp                                              extends Msg
-  case object NoOp                                                extends Msg
   final case class SignUpError(message: String)                   extends Msg
   final case class SignUpSuccess(message: String)                 extends Msg
 

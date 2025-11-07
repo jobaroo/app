@@ -56,4 +56,6 @@ class App extends TyrianApp[App.Msg, App.Model]:
 object App:
 
   trait Msg
+  case object NoOp extends Msg
+
   final case class Model(router: Router, page: Page, session: Session)

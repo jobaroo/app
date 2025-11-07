@@ -13,8 +13,9 @@ object constants:
 
   object endpoints:
 
-    val root       = "http://localhost:8080"
-    val signUp     = s"$root/api/auth/users"
-    val login      = s"$root/api/auth/login"
-    val logout     = s"$root/api/auth/logout"
-    val checkToken = s"$root/api/auth/checkToken"
+    val root           = "http://localhost:8080"
+    val signUp         = s"$root/api/auth/users"
+    val login          = s"$root/api/auth/login"
+    val logout         = s"$root/api/auth/logout"
+    val checkToken     = s"$root/api/auth/checkToken"
+    val forgotPassword = s"$root/api/auth/reset"
