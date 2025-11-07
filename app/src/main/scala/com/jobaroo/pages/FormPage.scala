@@ -6,11 +6,13 @@ import tyrian.Html.*
 import com.jobaroo.App
 import com.jobaroo.pages.Page
 import com.jobaroo.core.Router
+import org.scalajs.dom.*
 
 abstract class FormPage(title: String, status: Option[Page.Status]) extends Page:
 
-  override def initCmd: Cmd[IO, App.Msg] = Cmd.None
-  override def view: Html[App.Msg]       = renderForm()
+  override def initCmd: Cmd[IO, App.Msg] = clearForm()
+
+  override def view: Html[App.Msg] = renderForm()
 
   protected def renderFormContent(): List[Html[App.Msg]]
 
@@ -22,6 +24,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       form(
         name    := "sign-in",
         `class` := "form",
+        id      := "form",
         onEvent(
           "submit",
           e =>
@@ -32,7 +35,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       status.fold(div())(s => div(s.message))
     )
 
-  protected def renderAuxLink(location: String, text: String): Html[App.Msg] = 
+  protected def renderAuxLink(location: String, text: String): Html[App.Msg] =
     a(
       href    := location,
       `class` := "aux-link",
@@ -43,9 +46,20 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
           Router.ChangeLocation(location)
       )
     )(text)
-    
+
   protected def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => App.Msg) =
     div(`class` := "form-input")(
       label(`for` := name, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
       input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
     )
+
+  private def clearForm() =
+    import scala.concurrent.duration.*
+
+    def effect: IO[Option[HTMLFormElement]] =
+      for
+        optForm <- IO(Option(document.getElementById("form").asInstanceOf[HTMLFormElement]))
+        eff     <- if optForm.isEmpty then IO.sleep(100.millis) *> effect else IO(optForm)
+      yield eff
+
+    Cmd.Run[IO, Unit, App.Msg](effect.map(_.foreach(_.reset())))(_ => App.NoOp)

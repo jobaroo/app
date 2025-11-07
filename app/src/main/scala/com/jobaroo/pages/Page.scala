@@ -22,20 +22,20 @@ object Page:
 
   object urls:
 
-    val login           = "/login"
-    val signup          = "/signup"
-    val jobs            = "/jobs"
-    val forgotPassword  = "/forgot-password"
-    val recoverPassword = "/recover-password"
-    val empty           = ""
-    val home            = "/"
-    val hash            = "#"
+    val login          = "/login"
+    val signup         = "/signup"
+    val jobs           = "/jobs"
+    val forgotPassword = "/forgot-password"
+    val resetPassword  = "/recover-password"
+    val empty          = ""
+    val home           = "/"
+    val hash           = "#"
 
   def apply(location: String): Page = location match
     case urls.`login`                             => LoginPage()
     case urls.`signup`                            => SignUpPage()
     case urls.`forgotPassword`                    => ForgotPasswordPage()
-    case urls.`recoverPassword`                   => RecoverPasswordPage()
+    case urls.`resetPassword`                     => ResetPasswordPage()
     case urls.`empty` | urls.`home` | urls.`jobs` => JobListPage()
     case s"/jobs/$id"                             => JobPage(id)
     case _                                        => NotFoundPage()

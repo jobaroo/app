@@ -12,22 +12,24 @@ import com.jobaroo.common.*
 import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
 import com.jobaroo.domain.auth.*
+import com.jobaroo.pages.Page.urls
 
 final case class ForgotPasswordPage(email: String = "", status: Option[Page.Status] = None)
-  extends FormPage("Reset Password", status):
+  extends FormPage("Recover Password", status):
 
   import ForgotPasswordPage.*
 
   override def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    button(`type` := "button", onClick(ResetPassword))("Send Email")
+    button(`type` := "button", onClick(ResetPassword))("Send Email"),
+    renderAuxLink(urls.resetPassword, "Have a token?")
   )
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)          => (this.copy(email = email), Cmd.None)
     case ResetPassword               =>
       if !email.matches(constants.emailRegex) then (setErrorStatus("Invalid email"), Cmd.None)
-      else (this.copy(email = email), commands.resetPassword(email))
+      else (this, commands.resetPassword(email))
     case ResetPasswordSuccess        => (setSuccessStatus("Check your inbox!"), Cmd.None)
     case ResetPasswordFailure(error) => (setErrorStatus(error), Cmd.None)
 
