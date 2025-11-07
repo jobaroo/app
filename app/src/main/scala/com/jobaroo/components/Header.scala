@@ -28,7 +28,10 @@ object Header:
       renderNavLink("Login", urls.login)(Router.ChangeLocation(_))
     )
 
-    val authedLinks = List(renderNavLink("Log Out", urls.hash)(_ => Session.Logout))
+    val authedLinks = List(
+      renderNavLink("Profile", urls.profile)(Router.ChangeLocation(_)),
+      renderNavLink("Log Out", urls.hash)(_ => Session.Logout)
+    )
 
     constantLinks ++ (if Session.isActive then authedLinks else unauthedLinks)
 
