@@ -4,6 +4,7 @@ import tyrian.*
 import cats.effect.*
 import com.jobaroo.pages.Page.urls.login
 import com.jobaroo.App
+import com.jobaroo.pages.Page.urls.postJob
 
 abstract class Page:
 
@@ -28,6 +29,7 @@ object Page:
     val forgotPassword = "/forgot-password"
     val resetPassword  = "/recover-password"
     val profile        = "/profile"
+    val postJob        = "/post-job"
     val empty          = ""
     val home           = "/"
     val hash           = "#"
@@ -38,6 +40,7 @@ object Page:
     case urls.`forgotPassword`                    => ForgotPasswordPage()
     case urls.`resetPassword`                     => ResetPasswordPage()
     case urls.`profile`                           => ProfilePage()
+    case urls.`postJob`                           => PostJobPage()
     case urls.`empty` | urls.`home` | urls.`jobs` => JobListPage()
     case s"/jobs/$id"                             => JobPage(id)
     case _                                        => NotFoundPage()

@@ -21,3 +21,4 @@ object constants:
     val forgotPassword = s"$root/api/auth/reset"
     val resetPassword  = s"$root/api/auth/recover"
     val changePassword = s"$root/api/auth/users/password"
+    val createJob      = s"$root/api/jobs/create"
