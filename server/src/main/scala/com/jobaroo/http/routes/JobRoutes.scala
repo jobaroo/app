@@ -33,6 +33,14 @@ class JobRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (jobs: Jobs
   object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
   object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
 
+  private val allFiltersRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ GET -> Root / "filters" =>
+      for
+        jobFilter <- jobs.possibleFilters()
+        resp      <- Ok(jobFilter)
+      yield resp
+  }
+
   private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root :? LimitQueryParam(limit) +& OffsetQueryParam(offset) =>
       for
@@ -79,7 +87,7 @@ class JobRoutes[F[_] : Concurrent : Logger : SecuredHandler] private (jobs: Jobs
       }
   }
 
-  private val unauthedRoutes = allJobsRoute <+> findJobRoute
+  private val unauthedRoutes = allJobsRoute <+> findJobRoute <+> allFiltersRoute
 
   private val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|

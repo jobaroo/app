@@ -5,6 +5,8 @@ object constants:
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""
 
+  val defaultPageSize = 20
+
   object cookies:
 
     val duration = 10 * 24 * 3600 * 1000
@@ -22,3 +24,5 @@ object constants:
     val resetPassword  = s"$root/api/auth/recover"
     val changePassword = s"$root/api/auth/users/password"
     val createJob      = s"$root/api/jobs/create"
+    val jobs           = s"$root/api/jobs"
+    val jobFilters     = s"$root/api/jobs/filters"

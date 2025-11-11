@@ -147,4 +147,23 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
       }
     }
 
+    "should surface a comprehensive filter out of all jobs contained" in {
+      transactor.use { xa =>
+        val program =
+          for
+            jobs      <- LiveJobs[IO](xa)
+            jobFilter <- jobs.possibleFilters()
+          yield jobFilter
+
+        program.asserting {
+          case JobFilter(companies, locations, countries, seniorities, tags, maxSalary, remote) =>
+            companies shouldBe List("Apple")
+            locations shouldBe List("From remote")
+            seniorities shouldBe List("High")
+            tags.toSet shouldBe Set("scala", "scala-3", "cats", "akka", "spark", "flink", "zio")
+            maxSalary shouldBe Option(3500)
+        }
+      }
+    }
+
   }

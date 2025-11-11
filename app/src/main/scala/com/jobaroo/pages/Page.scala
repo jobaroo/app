@@ -2,11 +2,10 @@ package com.jobaroo.pages
 
 import tyrian.*
 import cats.effect.*
-import com.jobaroo.pages.Page.urls.login
 import com.jobaroo.App
-import com.jobaroo.pages.Page.urls.postJob
+import com.jobaroo.components.Component
 
-abstract class Page:
+abstract class Page extends Component[App.Msg, Page]:
 
   import Page.*
 

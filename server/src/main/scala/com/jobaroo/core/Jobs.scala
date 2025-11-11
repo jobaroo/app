@@ -23,6 +23,7 @@ trait Jobs[F[_]]:
   def find(id: UUID): F[Option[Job]]
   def all(): F[List[Job]]
   def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
+  def possibleFilters(): F[JobFilter]
 
 final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transactor[F]) extends Jobs[F]:
 
@@ -191,8 +192,10 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
         filter.locations.toNel.map { Fragments.in(fr"location", _) },
         filter.countries.toNel.map { Fragments.in(fr"country", _) },
         filter.seniorities.toNel.map { Fragments.in(fr"seniority", _) },
-        filter.remote.some.map { remote => fr"remote = $remote" },
-        filter.maxSalary.map { maxSalary => fr"salary > $maxSalary" },
+        filter.remote.some.filter(identity).map { remote => fr"remote = $remote" },
+        /* TODO - if salary not specified on UI then it's set to 0, this case is error prone when salary range is not a
+         * required field */
+        filter.maxSalary.map { maxSalary => fr"salaryHigh > $maxSalary OR salaryHigh IS NULL" },
         filter.tags.toNel.map { tags => Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)")*) }
       )
 
@@ -200,7 +203,26 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
       fr"""ORDER BY id LIMIT ${pagination.limit} OFFSET ${pagination.offset}"""
 
     val statement = selectFragment |+| fromFragment |+| whereFragment |+| paginationFragment
-    Logger[F].info(statement.toString) *> statement.query[Job].to[List].transact(xa).logError(_.getMessage)
+
+    statement.query[Job].to[List].transact(xa).log(
+      success = jobs => jobs.map(_.id.toString).mkString("\n"),
+      error = _.getMessage
+    )
+
+  override def possibleFilters(): F[JobFilter] =
+    sql"""
+        SELECT
+            ARRAY(SELECT DISTINCT(company) FROM jobs) AS companies,
+            ARRAY(SELECT DISTINCT(location) FROM jobs) AS locations,
+            ARRAY(SELECT DISTINCT(country) FROM jobs WHERE country IS NOT NULL) AS countries,
+            ARRAY(SELECT DISTINCT(seniority) FROM jobs WHERE seniority IS NOT NULL) AS seniorities,
+            ARRAY(SELECT DISTINCT(UNNEST(tags)) FROM jobs) AS tags,
+            MAX(salaryHigh), false AS remote from jobs
+    """
+      .query[JobFilter]
+      .option
+      .transact(xa)
+      .map(_.getOrElse(JobFilter()))
 
 object LiveJobs:
 

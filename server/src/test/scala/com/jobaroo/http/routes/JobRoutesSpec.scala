@@ -49,6 +49,8 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
     override def all(filter: JobFilter, pagination: Pagination): IO[List[Job]] =
       if filter.remote then IO.pure(Nil) else IO.pure(berlinTechLeadJob :: Nil)
 
+    override def possibleFilters(): IO[JobFilter] = IO.pure(JobFilter())
+
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
   ////////////////////////////////////////////////////////////////////////////////////
@@ -140,6 +142,15 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
                         .withBearerToken(jwtToken)
                     )
       yield resp.status shouldBe Status.NotFound
+    }
+
+    "should surface all possible filters" in {
+      for
+        resp      <- jobRoutes.orNotFound.run(
+                       Request[IO](method = Method.GET, uri = uri"/jobs/filters")
+                     )
+        jobFilter <- resp.as[JobFilter]
+      yield jobFilter shouldBe JobFilter()
     }
 
   }
