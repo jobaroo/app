@@ -36,18 +36,6 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       status.fold(div())(s => div(s.message))
     )
 
-  protected def renderAuxLink(location: String, text: String): Html[App.Msg] =
-    a(
-      href    := location,
-      `class` := "aux-link",
-      onEvent(
-        "click",
-        e =>
-          e.preventDefault()
-          Router.ChangeLocation(location)
-      )
-    )(text)
-
   protected def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => App.Msg) =
     div(`class` := "form-input")(
       label(`for` := uid, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),

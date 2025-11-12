@@ -14,6 +14,7 @@ import com.jobaroo.domain.auth.*
 import com.jobaroo.common.Endpoint
 import com.jobaroo.core.Session
 import com.jobaroo.App
+import com.jobaroo.components.Anchors
 
 final case class LoginPage(email: String = "", password: String = "", status: Option[Page.Status] = None)
   extends FormPage("Log In", status):
@@ -37,7 +38,7 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(Login))("Log In"),
-    renderAuxLink(urls.forgotPassword, "Forgot Password?")
+    Anchors.renderAuxLink(urls.forgotPassword, "Forgot Password?")
   )
 
   private def setErrorStatus(message: String): LoginPage   = this.copy(status = Some(Page.Status(message, Kind.ERROR)))

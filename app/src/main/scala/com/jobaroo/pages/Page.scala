@@ -4,6 +4,7 @@ import tyrian.*
 import cats.effect.*
 import com.jobaroo.App
 import com.jobaroo.components.Component
+import java.util.UUID
 
 abstract class Page extends Component[App.Msg, Page]:
 
@@ -22,16 +23,17 @@ object Page:
 
   object urls:
 
-    val login          = "/login"
-    val signup         = "/signup"
-    val jobs           = "/jobs"
-    val forgotPassword = "/forgot-password"
-    val resetPassword  = "/recover-password"
-    val profile        = "/profile"
-    val postJob        = "/post-job"
-    val empty          = ""
-    val home           = "/"
-    val hash           = "#"
+    val login                 = "/login"
+    val signup                = "/signup"
+    val jobs                  = "/jobs"
+    val forgotPassword        = "/forgot-password"
+    val resetPassword         = "/recover-password"
+    val profile               = "/profile"
+    val postJob               = "/post-job"
+    val empty                 = ""
+    val home                  = "/"
+    val hash                  = "#"
+    def job(id: UUID): String = s"/jobs/$id"
 
   def apply(location: String): Page = location match
     case urls.`login`                             => LoginPage()

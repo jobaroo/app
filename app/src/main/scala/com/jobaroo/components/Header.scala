@@ -7,6 +7,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 import com.jobaroo.pages.Page.*
 import com.jobaroo.App
+import com.jobaroo.components.*
 
 object Header:
 
@@ -22,18 +23,18 @@ object Header:
 
   private def renderNavLinks(): List[Html[App.Msg]] =
     val constantLinks = List(
-      renderNavLink("Jobs", urls.jobs)(Router.ChangeLocation(_)),
-      renderNavLink("Post Job", urls.postJob)(Router.ChangeLocation(_))
+      Anchors.renderNavLink("Jobs", urls.jobs)(Router.ChangeLocation(_)),
+      Anchors.renderNavLink("Post Job", urls.postJob)(Router.ChangeLocation(_))
     )
 
     val unauthedLinks = List(
-      renderNavLink("Sign Up", urls.signup)(Router.ChangeLocation(_)),
-      renderNavLink("Login", urls.login)(Router.ChangeLocation(_))
+      Anchors.renderNavLink("Sign Up", urls.signup)(Router.ChangeLocation(_)),
+      Anchors.renderNavLink("Login", urls.login)(Router.ChangeLocation(_))
     )
 
     val authedLinks = List(
-      renderNavLink("Profile", urls.profile)(Router.ChangeLocation(_)),
-      renderNavLink("Log Out", urls.hash)(_ => Session.Logout)
+      Anchors.renderNavLink("Profile", urls.profile)(Router.ChangeLocation(_)),
+      Anchors.renderNavLink("Log Out", urls.hash)(_ => Session.Logout)
     )
 
     constantLinks ++ (if Session.isActive then authedLinks else unauthedLinks)
@@ -52,17 +53,3 @@ object Header:
           Router.ChangeLocation("/")
       )
     )(img(`class` := "home-logo", src := logoImage, alt := "Jobaroo"))
-
-  private def renderNavLink(text: String, location: String)(location2msg: String => App.Msg) =
-    li(`class` := "nav-item")(
-      a(
-        href    := location,
-        `class` := "nav-link",
-        onEvent(
-          "click",
-          e =>
-            e.preventDefault()
-            location2msg(location)
-        )
-      )(text)
-    )

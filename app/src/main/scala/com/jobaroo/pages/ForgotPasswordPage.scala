@@ -13,6 +13,7 @@ import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
 import com.jobaroo.domain.auth.*
 import com.jobaroo.pages.Page.urls
+import com.jobaroo.components.Anchors
 
 final case class ForgotPasswordPage(email: String = "", status: Option[Page.Status] = None)
   extends FormPage("Recover Password", status):
@@ -22,7 +23,7 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
   override def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     button(`type` := "button", onClick(ResetPassword))("Send Email"),
-    renderAuxLink(urls.resetPassword, "Have a token?")
+    Anchors.renderAuxLink(urls.resetPassword, "Have a token?")
   )
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match

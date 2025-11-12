@@ -19,7 +19,8 @@ import tyrian.cmds.Logger
 import com.jobaroo.pages.Page.Kind
 import com.jobaroo.components.FilterPanel
 import com.jobaroo.pages.JobListPage.FilterJobs
-import com.jobaroo.common.constants.endpoints.jobFilters
+import com.jobaroo.components.Anchors
+import com.jobaroo.core.Router
 
 final case class JobListPage(
   jobs       : List[Job] = Nil,
@@ -60,7 +61,13 @@ final case class JobListPage(
         src     := job.jobInfo.image.getOrElse(""),
         alt     := job.jobInfo.title
       )),
-      div(`class` := "job-card-content")(h4(s"${job.jobInfo.company} - ${job.jobInfo.title}")),
+      div(`class` := "job-card-content")(
+        h4(
+          Anchors.renderNavLink(s"${job.jobInfo.company} - ${job.jobInfo.title}", urls.job(job.id))(
+            Router.ChangeLocation(_)
+          )
+        )
+      ),
       div(`class` := "job-card-apply")(a(href := job.jobInfo.externalUrl, target := "blank")("Apply"))
     )
 
