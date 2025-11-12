@@ -12,32 +12,56 @@ import com.jobaroo.components.*
 object Header:
 
   def view =
-    div(`class` := "header-container")(
-      logo,
-      div(`class` := "header-nav")(
-        ul(`class` := "header-links")(
-          renderNavLinks()
+    div(`class` := "container-fluid p-0")(
+      div(`class` := "jvm-nav")(
+        div(`class` := "container")(
+          nav(`class` := "navbar navbar-expand-lg navbar-light JVM-nav")(
+            div(`class` := "container")(
+              logo,
+              button(
+                `class` := "navbar-toggler",
+                `type`  := "button",
+                attribute("data-bs-toggle", "collapse"),
+                attribute("data-bs-target", "#navbarNav"),
+                attribute("aria-controls", "navbarNav"),
+                attribute("aria-expanded", "false"),
+                attribute("aria-label", "Toggle navigation")
+              )(
+                span(`class` := "navbar-toggler-icon")()
+              ),
+              div(`class` := "collapse navbar-collapse", id := "navbarNav")(
+                ul(`class` := "navbar-nav ms-auto menu align-center expanded text-center SMN_effect-3")(
+                  renderNavLinks()
+                )
+              )
+            )
+          )
         )
       )
     )
 
   private def renderNavLinks(): List[Html[App.Msg]] =
     val constantLinks = List(
-      Anchors.renderNavLink("Jobs", urls.jobs)(Router.ChangeLocation(_)),
-      Anchors.renderNavLink("Post Job", urls.postJob)(Router.ChangeLocation(_))
+      renderNavLink("Jobs", urls.jobs)(Router.ChangeLocation(_)),
+      renderNavLink("Post Job", urls.postJob)(Router.ChangeLocation(_))
     )
 
     val unauthedLinks = List(
-      Anchors.renderNavLink("Sign Up", urls.signup)(Router.ChangeLocation(_)),
-      Anchors.renderNavLink("Login", urls.login)(Router.ChangeLocation(_))
+      renderNavLink("Sign Up", urls.signup)(Router.ChangeLocation(_)),
+      renderNavLink("Login", urls.login)(Router.ChangeLocation(_))
     )
 
     val authedLinks = List(
-      Anchors.renderNavLink("Profile", urls.profile)(Router.ChangeLocation(_)),
-      Anchors.renderNavLink("Log Out", urls.hash)(_ => Session.Logout)
+      renderNavLink("Profile", urls.profile)(Router.ChangeLocation(_)),
+      renderNavLink("Log Out", urls.hash)(_ => Session.Logout)
     )
 
     constantLinks ++ (if Session.isActive then authedLinks else unauthedLinks)
+
+  def renderNavLink(text: String, location: String)(location2msg: String => App.Msg) =
+    li(`class` := "nav-item")(
+      Anchors.renderNavLink(text, location, "nav-link jvm-item Home active-item")(location2msg)
+    )
 
   @js.native
   @JSImport("url:/static/img/jobaroo.png", JSImport.Default)
@@ -45,7 +69,8 @@ object Header:
 
   private def logo =
     a(
-      href := "/",
+      href    := "/",
+      `class` := "navbar-brand",
       onEvent(
         "click",
         e =>
