@@ -19,17 +19,15 @@ object Anchors:
           Router.ChangeLocation(location)
       )
     )(text)
-  
+
   def renderNavLink(text: String, location: String, cssClass: String = "")(location2msg: String => App.Msg) =
-    li(`class` := "nav-item")(
-      a(
-        href    := location,
-        `class` := cssClass,
-        onEvent(
-          "click",
-          e =>
-            e.preventDefault()
-            location2msg(location)
-        )
-      )(text)
-    )
+    a(
+      href    := location,
+      `class` := cssClass,
+      onEvent(
+        "click",
+        e =>
+          e.preventDefault()
+          location2msg(location)
+      )
+    )(text)

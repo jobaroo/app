@@ -21,6 +21,7 @@ import com.jobaroo.components.FilterPanel
 import com.jobaroo.pages.JobListPage.FilterJobs
 import com.jobaroo.components.Anchors
 import com.jobaroo.core.Router
+import com.jobaroo.components.JobComponents
 
 final case class JobListPage(
   jobs       : List[Job] = Nil,
@@ -54,34 +55,22 @@ final case class JobListPage(
             filterPanel.view
           ),
           div(`class` := "col-lg-8")(
-            jobs.map(renderJob) ++ optRenderLoadMore
+            jobs.map(JobComponents.renderJob) ++ optRenderLoadMore
           )
         )
       )
-    )
-
-  private def renderJob(job: Job): Html[App.Msg] =
-    div(`class` := "job-card")(
-      div(`class` := "job-card-image")(img(
-        `class` := "job-logo",
-        src     := job.jobInfo.image.getOrElse(""),
-        alt     := job.jobInfo.title
-      )),
-      div(`class` := "job-card-content")(
-        h4(
-          Anchors.renderNavLink(s"${job.jobInfo.company} - ${job.jobInfo.title}", urls.job(job.id))(
-            Router.ChangeLocation(_)
-          )
-        )
-      ),
-      div(`class` := "job-card-apply")(a(href := job.jobInfo.externalUrl, target := "blank")("Apply"))
     )
 
   private def optRenderLoadMore: Option[Html[App.Msg]] = status.map { s =>
     div(`class` := "load-more-action")(
       s.kind match
         case Kind.SUCCESS =>
-          if canLoadMore then button(`type` := "button", onClick(LoadMoreJobs))("Load more jobs")
+          if canLoadMore then
+            button(
+              `type`  := "button",
+              `class` := "load-more-btn",
+              onClick(LoadMoreJobs)
+            )("Load more jobs")
           else div("All jobs loaded.")
         case Kind.ERROR   => div(s.message)
         case Kind.LOADING => div("Loading...")

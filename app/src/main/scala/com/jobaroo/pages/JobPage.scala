@@ -20,6 +20,7 @@ import com.jobaroo.pages.Page.Kind
 
 import laika.api.*
 import laika.format.*
+import com.jobaroo.components.JobComponents
 
 final case class JobPage(
   id    : String,
@@ -43,34 +44,13 @@ final case class JobPage(
           alt     := job.jobInfo.title
         )),
         h1(s"${job.jobInfo.company} - ${job.jobInfo.title}"),
-        div(`class` := "job-overview")(renderJobDetails(job)),
+        div(`class` := "job-overview")(JobComponents.renderJobSummary(job)),
         renderJobDescription(job),
         a(href := job.jobInfo.externalUrl, `class` := "job-apply-action", target := "blank")("Apply")
       )
     case None      => status.kind match
         case Kind.SUCCESS | Kind.ERROR => div("This job doesn't exists")
         case Kind.LOADING              => div("Loading...")
-
-  private def renderJobDetails(job: Job): Html[App.Msg] =
-    def renderDetail(value: String): Html[App.Msg] =
-      if value.isEmpty then div() else li(`class` := "job-detail-value")(value)
-
-    val currencyText = job.jobInfo.currency.getOrElse("")
-    val locationText = job.jobInfo.country.fold(job.jobInfo.location)(c => s"$c, ${job.jobInfo.location}")
-    val salaryText   = (job.jobInfo.salaryLow, job.jobInfo.salaryHigh) match
-      case (Some(low), Some(high)) => s"$currencyText $low-$high"
-      case (Some(low), None)       => s"> $currencyText $low"
-      case (None, Some(high))      => s"<= $currencyText $high"
-      case _                       => "N/A"
-
-    div(`class` := "job-details")(
-      ul(`class` := "job-detail")(
-        renderDetail(locationText),
-        renderDetail(salaryText),
-        renderDetail(job.jobInfo.seniority.getOrElse("All levels")),
-        renderDetail(job.jobInfo.tags.getOrElse(List.empty).mkString(","))
-      )
-    )
 
   private def renderJobDescription(job: Job): Html[App.Msg] =
     val htmlText = markdownTransformer.transform(job.jobInfo.description) match
