@@ -8,10 +8,10 @@ import com.jobaroo.core.Router
 
 object Anchors:
 
-  def renderAuxLink(location: String, text: String): Html[App.Msg] =
+  def renderAuxLink(location: String, text: String, cssClass: String = ""): Html[App.Msg] =
     a(
       href    := location,
-      `class` := "aux-link",
+      `class` := cssClass,
       onEvent(
         "click",
         e =>

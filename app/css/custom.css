@@ -115,8 +115,84 @@
     .markdown-body {
         padding: 15px;
     }
+    
+    .logo {
+        min-height: 0 !important;
+        height: 0 !important;
+    }
 }
 
 .jvm-jobs-details-top-card {
     color: white;
+}
+
+.logo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 100%;
+}
+
+.col-md-5 {
+    min-height: 100vh;
+}
+
+.logo::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    background-size: 300%;
+    animation: animateBG 20s ease infinite;
+    background-image: linear-gradient(
+        -45deg, rgb(38, 145, 207) 0%, rgb(43, 51, 160) 25%, rgb(96, 54, 127) 50%, rgb(153, 67, 67) 100%
+    ); 
+}
+
+@keyframes animateBG {
+    0% {
+        background-position: 0% 50%;
+    }
+    
+    50% {
+        background-position: 100% 50%;
+    }
+    
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.auth-link {
+    display: block;
+    margin: 20px 0;
+}
+
+.form-check.form-switch {
+    padding-left: 0 !important;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.job .form-check-label {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.form-errors {
+    border: 1px solid red;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.top-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+textarea.form-control {
+    min-height: 200px;
+    font-family: monospace;
 }

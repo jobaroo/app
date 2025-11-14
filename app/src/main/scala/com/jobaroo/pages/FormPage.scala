@@ -8,6 +8,7 @@ import com.jobaroo.pages.Page
 import com.jobaroo.core.Router
 import org.scalajs.dom.*
 import org.scalajs.dom.HTMLInputElement
+import com.jobaroo.common.constants
 
 abstract class FormPage(title: String, status: Option[Page.Status]) extends Page:
 
@@ -18,34 +19,64 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
   protected def renderFormContent(): List[Html[App.Msg]]
 
   protected def renderForm(): Html[App.Msg] =
-    div(`class` := "form-section")(
-      div(`class` := "top-section")(
-        h1(title)
+    div(`class` := "row")(
+      div(`class` := "col-md-5 p-0")(
+        div(`class` := "logo")()
       ),
-      form(
-        name    := "sign-in",
-        `class` := "form",
-        id      := "form",
-        onEvent(
-          "submit",
-          e =>
-            e.preventDefault()
-            App.NoOp
+      div(`class` := "col-md-7")(
+        div(`class` := "form-section")(
+          div(`class` := "top-section")(
+            h1(span(title)),
+            status.fold(div())(s => div(`class` := "form-errors")(s.message))
+          ),
+          form(
+            name    := "sign-in",
+            `class` := "form",
+            id      := "form",
+            onEvent(
+              "submit",
+              e =>
+                e.preventDefault()
+                App.NoOp
+            )
+          )(renderFormContent())
         )
-      )(renderFormContent()),
-      status.fold(div())(s => div(s.message))
+      )
     )
 
   protected def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => App.Msg) =
-    div(`class` := "form-input")(
-      label(`for` := uid, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
-      input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
+    div(`class` := "row")(
+      div(`class` := "col-md-12")(
+        div(`class` := "form-input")(
+          label(`for` := uid, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
+          input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
+        )
+      )
+    )
+
+  protected def renderToggle(
+    name: String,
+    uid: String,
+    isRequired: Boolean,
+    onChange: String => App.Msg
+  ) =
+    div(`class` := "row")(
+      div(`class` := "col-md-12 job")(
+        div(`class` := "form-check form-switch")(
+          label(`for` := uid, `class` := "form-check-label")(if isRequired then span("*") else span(), text(name)),
+          input(`type` := "checkbox", `class` := "form-check-input", id := uid, onInput(onChange))
+        )
+      )
     )
 
   protected def renderTextArea(name: String, uid: String, isRequired: Boolean, onChange: String => App.Msg) =
-    div(`class` := "form-input")(
-      label(`for` := uid, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
-      textarea(`class` := "form-control", id := uid, onInput(onChange))("")
+    div(`class` := "row")(
+      div(`class` := "col-md-12")(
+        div(`class` := "form-input")(
+          label(`for` := uid, `class` := "form-label")(if isRequired then span("*") else span(), text(name)),
+          textarea(`class` := "form-control", id := uid, onInput(onChange))("")
+        )
+      )
     )
 
   protected def renderImageUploadInput(
@@ -54,22 +85,25 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
     imgSrc: Option[String],
     onChange: Option[File] => App.Msg
   ) =
-    div(`class` := "form-input")(
-      label(`for` := uid, `class` := "form-label")(name),
-      input(
-        `type`  := "file",
-        `class` := "form-control",
-        id      := uid,
-        accept  := "image/*",
-        onEvent(
-          "change",
-          e =>
-            val imageInput = e.target.asInstanceOf[HTMLInputElement]
-            val fileList   = imageInput.files
-            onChange(Option.when(fileList.length > 0)(fileList(0)))
+    div(`class` := "row")(
+      div(`class` := "col-md-12")(
+        div(`class` := "form-input")(
+          label(`for` := uid, `class` := "form-label")(name),
+          input(
+            `type`  := "file",
+            `class` := "form-control",
+            id      := uid,
+            accept  := "image/*",
+            onEvent(
+              "change",
+              e =>
+                val imageInput = e.target.asInstanceOf[HTMLInputElement]
+                val fileList   = imageInput.files
+                onChange(Option.when(fileList.length > 0)(fileList(0)))
+            )
+          )
         )
-      ),
-      img(id    := "preview", src := imgSrc.getOrElse(""), alt := "Preview", width := "100", height := "100")
+      )
     )
 
   private def clearForm() =

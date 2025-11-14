@@ -3,11 +3,10 @@ package com.jobaroo.components
 import tyrian.*
 import tyrian.Html.*
 import com.jobaroo.core.*
-import scala.scalajs.js
-import scala.scalajs.js.annotation.*
 import com.jobaroo.pages.Page.*
 import com.jobaroo.App
 import com.jobaroo.components.*
+import com.jobaroo.common.constants
 
 object Header:
 
@@ -63,10 +62,6 @@ object Header:
       Anchors.renderNavLink(text, location, "nav-link jvm-item Home active-item")(location2msg)
     )
 
-  @js.native
-  @JSImport("url:/static/img/jobaroo.png", JSImport.Default)
-  private val logoImage: String = js.native
-
   private def logo =
     a(
       href    := "/",
@@ -77,4 +72,4 @@ object Header:
           e.preventDefault()
           Router.ChangeLocation("/")
       )
-    )(img(`class` := "home-logo", src := logoImage, alt := "Jobaroo"))
+    )(img(`class` := "home-logo", src := constants.logoImage, alt := "Jobaroo"))

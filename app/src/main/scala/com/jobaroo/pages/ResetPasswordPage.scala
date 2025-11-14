@@ -42,7 +42,7 @@ final case class ResetPasswordPage(
     renderInput("Token", "token", "text", true, UpdateToken(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(ResetPassword))("Set Password"),
-    Anchors.renderAuxLink(urls.forgotPassword, "Don't have a token yet?")
+    Anchors.renderAuxLink(urls.forgotPassword, "Don't have a token yet?", cssClass = "auth-link")
   )
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))

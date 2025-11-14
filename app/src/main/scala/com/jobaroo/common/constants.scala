@@ -1,6 +1,13 @@
 package com.jobaroo.common
 
+import scala.scalajs.js
+import scala.scalajs.js.annotation.*
+
 object constants:
+
+  @js.native
+  @JSImport("url:/static/img/jobaroo.png", JSImport.Default)
+  val logoImage: String = js.native
 
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""

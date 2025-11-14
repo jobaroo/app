@@ -38,7 +38,7 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(Login))("Log In"),
-    Anchors.renderAuxLink(urls.forgotPassword, "Forgot Password?")
+    Anchors.renderAuxLink(urls.forgotPassword, "Forgot Password?", cssClass = "auth-link")
   )
 
   private def setErrorStatus(message: String): LoginPage   = this.copy(status = Some(Page.Status(message, Kind.ERROR)))
