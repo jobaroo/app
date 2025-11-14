@@ -22,6 +22,20 @@ import laika.api.*
 import laika.format.*
 import com.jobaroo.components.JobComponents
 
+import scala.scalajs.*
+import scala.scalajs.js.*
+import scala.scalajs.js.annotation.*
+
+@js.native
+@JSGlobal()
+class Moment extends js.Object:
+  def fromNow(): String = js.native
+
+@js.native
+@JSImport("moment", JSImport.Default)
+object MomentLib extends js.Object:
+  def unix(date: Long): Moment = js.native
+
 final case class JobPage(
   id    : String,
   optJob: Option[Job] = None,
@@ -37,20 +51,65 @@ final case class JobPage(
     case SetJob(job)       => (this.copy(optJob = Some(job)), Cmd.None)
 
   override def view: Html[App.Msg] = optJob match
-    case Some(job) => div(`class` := "job-page")(
-        div(`class` := "job-hero")(img(
-          `class` := "job-logo",
-          src     := job.jobInfo.image.getOrElse(""),
-          alt     := job.jobInfo.title
-        )),
-        h1(s"${job.jobInfo.company} - ${job.jobInfo.title}"),
-        div(`class` := "job-overview")(JobComponents.renderJobSummary(job)),
-        renderJobDescription(job),
-        a(href := job.jobInfo.externalUrl, `class` := "job-apply-action", target := "blank")("Apply")
+    case Some(job) => renderJobPage(job)
+    case None      => renderNoJobPage
+
+  private def renderNoJobPage: Html[App.Msg] =
+    val errorHtml = status.kind match
+      case Kind.SUCCESS | Kind.ERROR => h1("This job doesn't exists")
+      case Kind.LOADING              => h1("Loading...")
+
+    div(`class` := "container-fluid the-rock")(
+      div(`class` := "row jvm-jobs-details-top-card")(errorHtml)
+    )
+
+  private def renderJobPage(job: Job) =
+    div(`class` := "container-fluid the-rock")(
+      div(`class` := "row jvm-jobs-details-top-card")(
+        div(`class` := "col-md-12 p-0")(
+          div(`class` := "jvm-jobs-details-card-profile-img")(
+            img(
+              `class` := "img-fluid",
+              src     := job.jobInfo.image.getOrElse(""),
+              alt     := job.jobInfo.title
+            )
+          ),
+          div(`class` := "jvm-jobs-details-card-profile-title")(
+            h1(s"${job.jobInfo.company} - ${job.jobInfo.title}"),
+            div(`class` := "jvm-jobs-details-card-profile-job-details-company-and-location")(
+              JobComponents.renderJobSummary(job)
+            )
+          ),
+          div(`class` := "jvm-jobs-details-card-apply-now-btn")(
+            a(href := job.jobInfo.externalUrl, target := "blank")(
+              button(`type` := "button", `class` := "btn btn-warning")("Apply now")
+            ),
+            p(MomentLib.unix(job.date / 1_000L).fromNow())
+          )
+        )
+      ),
+      div(`class` := "container-fluid")(
+        div(`class` := "container")(
+          div(`class` := "markdown-body overview-section")(
+            renderJobDescription(job)
+          )
+        ),
+        div(`class` := "container")(
+          div(`class` := "rok-last")(
+            div(`class` := "row")(
+              div(`class` := "col-md-6 col-sm-6 col-6")(
+                span(`class` := "rock-apply")("Apply for this job.")
+              ),
+              div(`class` := "col-md-6 col-sm-6 col-6")(
+                a(href := job.jobInfo.externalUrl, target := "blank")(
+                  button(`type` := "button", `class` := "rock-apply-btn")("Apply now")
+                )
+              )
+            )
+          )
+        )
       )
-    case None      => status.kind match
-        case Kind.SUCCESS | Kind.ERROR => div("This job doesn't exists")
-        case Kind.LOADING              => div("Loading...")
+    )
 
   private def renderJobDescription(job: Job): Html[App.Msg] =
     val htmlText = markdownTransformer.transform(job.jobInfo.description) match
