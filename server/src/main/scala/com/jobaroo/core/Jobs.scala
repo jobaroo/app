@@ -14,6 +14,7 @@ import com.jobaroo.domain.pagination.Pagination
 import org.typelevel.log4cats.*
 import com.jobaroo.logging.syntax.*
 import java.util.UUID
+import java.{util => ju}
 
 trait Jobs[F[_]]:
 
@@ -24,6 +25,7 @@ trait Jobs[F[_]]:
   def all(): F[List[Job]]
   def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
   def possibleFilters(): F[JobFilter]
+  def activate(id: UUID): F[Int]
 
 final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transactor[F]) extends Jobs[F]:
 
@@ -96,6 +98,14 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
       .transact(xa)
       .flatMap(_ => find(id))
 
+  override def activate(id: UUID): F[Int] = 
+    sql"""
+        UPDATE jobs SET active = true WHERE id = $id
+        """
+        .update
+        .run
+        .transact(xa)
+        
   override def delete(id: UUID): F[Int] =
     sql"""
          DELETE FROM jobs WHERE id = $id
