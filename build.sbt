@@ -97,3 +97,16 @@ lazy val server = (project in file("server"))
     ),
     Compile / mainClass := Some("com.jobaroo.Application")
   ).dependsOn(common.jvm)
+
+lazy val stagingBuild = (project in(file("build/staging")))
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
+  .settings(
+    name                        := "jobaroo-staging",
+    scalaVersion                := scala3Version,
+    organization                := s"com.$jobaroo",
+    dockerBaseImage             := "eclipse-temurin:11-jre-alpine",
+    dockerExposedPorts ++= Seq(8080),
+    Compile / mainClass         := Some("com.jobaroo.Application"),
+    Compile / resourceDirectory := ((server / Compile / resourceDirectory).value / "staging")
+  )
+  .dependsOn(server)

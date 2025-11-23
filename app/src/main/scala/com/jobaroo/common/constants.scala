@@ -2,13 +2,15 @@ package com.jobaroo.common
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
+import scala.scalajs.LinkingInfo
+import org.scalajs.dom.window
 
 object constants:
 
   @js.native
   @JSImport("url:/static/img/jobaroo.png", JSImport.Default)
   val logoImage: String = js.native
-  
+
   @js.native
   @JSImport("url:/static/img/fallback.png", JSImport.Default)
   val fallbackImage: String = js.native
@@ -16,7 +18,7 @@ object constants:
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""
 
-  val defaultPageSize = 20
+  val defaultPageSize   = 20
   val jobAdvertPriceUSD = "99"
 
   object cookies:
@@ -27,7 +29,7 @@ object constants:
 
   object endpoints:
 
-    val root              = "http://localhost:8080"
+    val root              = if LinkingInfo.developmentMode then "http://localhost:8080" else window.location.origin
     val signUp            = s"$root/api/auth/users"
     val login             = s"$root/api/auth/login"
     val logout            = s"$root/api/auth/logout"
