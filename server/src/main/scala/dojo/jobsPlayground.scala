@@ -49,13 +49,9 @@ case object jobsPlayground extends IOApp.Simple:
       jobs     <- LiveJobs[IO](xa)
       id       <- jobs.create("com.leowajda@tuta.io", jobInfo)
       _        <- IO.println(s"Job id: $id")
-      all      <- jobs.all()
-      _        <- IO.println(s"all jobs: $all")
       newJob   <- jobs.update(id, jobInfo.copy(company = "Google"))
       _        <- IO.println(s"New job is: $newJob")
       count    <- jobs.delete(id)
       _        <- IO.println(s"rows affected: $count")
-      finalAll <- jobs.all()
-      _        <- IO.println(s"Jobs after deletion: $finalAll")
     yield ()
   }
