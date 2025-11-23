@@ -21,8 +21,15 @@ import com.jobaroo.domain.job.Job
 import org.http4s.HttpRoutes
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import com.stripe.model.checkout.Session
+import com.stripe.param.checkout.SessionCreateParams
 
 import java.util.UUID
+import com.jobaroo.core.LiveStripe
+import com.jobaroo.config.StripeConfig
+import com.jobaroo.core.Stripe
+import com.stripe.model.checkout.Session
+import java.{util => ju}
 
 class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with JobFixture
     with SecuredRouteFixture:
@@ -33,6 +40,8 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
   private val mockJobs: Jobs[IO] = new Jobs[IO]:
 
+    override def activate(id: ju.UUID): IO[Int] = IO.pure(1)
+    
     override def create(ownerEmail: String, jobInfo: JobInfo): IO[UUID] = IO.pure(berlinTechLeadJobId)
 
     override def update(id: UUID, jobInfo: JobInfo): IO[Option[Job]] =
@@ -51,12 +60,19 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
     override def possibleFilters(): IO[JobFilter] = IO.pure(JobFilter())
 
+  val mockStripe = new Stripe[IO]:
+    override def createCheckoutSession(jobId: String, userEmail: String): IO[Option[Session]] = 
+      IO.pure(Some(Session.create(SessionCreateParams.builder().build())))
+      
+    override def handleWebhookEvent[A](payload: String, signature: String, action: String => IO[A]): IO[Option[A]] =
+      IO.pure(None)
+
   ////////////////////////////////////////////////////////////////////////////////////
   // tests
   ////////////////////////////////////////////////////////////////////////////////////
 
   given Logger[IO]              = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs, null).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](mockJobs, mockStripe).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {

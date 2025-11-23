@@ -82,7 +82,8 @@ trait JobFixture:
     id = remoteSoftwareEngineerJobId,
     date = 1659186086L,
     ownerEmail = "some@email.com",
-    jobInfo = remoteSoftwareEngineerJobInfo
+    jobInfo = remoteSoftwareEngineerJobInfo,
+    active = true
   )
 
   val invalidJob: Job = Job(

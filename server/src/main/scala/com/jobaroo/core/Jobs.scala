@@ -136,7 +136,7 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
           other,
           active
         FROM jobs
-        WHERE id = $id
+        WHERE id = $id AND active = true
        """
       .query[Job]
       .option
@@ -164,6 +164,7 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
           other,
           active
         FROM jobs
+        WHERE active = true
        """
       .query[Job]
       .to[List]
@@ -206,7 +207,8 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
         /* TODO - if salary not specified on UI then it's set to 0, this case is error prone when salary range is not a
          * required field */
         filter.maxSalary.map { maxSalary => fr"salaryHigh > $maxSalary OR salaryHigh IS NULL" },
-        filter.tags.toNel.map { tags => Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)")*) }
+        filter.tags.toNel.map { tags => Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)")*) },
+        fr"active = true".some
       )
 
     val paginationFragment: Fragment =
@@ -222,12 +224,12 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
   override def possibleFilters(): F[JobFilter] =
     sql"""
         SELECT
-            ARRAY(SELECT DISTINCT(company) FROM jobs) AS companies,
-            ARRAY(SELECT DISTINCT(location) FROM jobs) AS locations,
-            ARRAY(SELECT DISTINCT(country) FROM jobs WHERE country IS NOT NULL) AS countries,
-            ARRAY(SELECT DISTINCT(seniority) FROM jobs WHERE seniority IS NOT NULL) AS seniorities,
-            ARRAY(SELECT DISTINCT(UNNEST(tags)) FROM jobs) AS tags,
-            MAX(salaryHigh), false AS remote from jobs
+            ARRAY(SELECT DISTINCT(company) FROM jobs WHERE active = true) AS companies,
+            ARRAY(SELECT DISTINCT(location) FROM jobs WHERE active = true) AS locations,
+            ARRAY(SELECT DISTINCT(country) FROM jobs WHERE country IS NOT NULL AND active = true) AS countries,
+            ARRAY(SELECT DISTINCT(seniority) FROM jobs WHERE seniority IS NOT NULL AND active = true) AS seniorities,
+            ARRAY(SELECT DISTINCT(UNNEST(tags)) FROM jobs WHERE active = true) AS tags,
+            MAX(salaryHigh), false AS remote from jobs WHERE active = true
     """
       .query[JobFilter]
       .option

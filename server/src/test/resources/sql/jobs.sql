@@ -58,4 +58,4 @@ VALUES ('19a941d0-aa19-477b-9ab0-a7033ae65c2b',
         NULL,
         'High',
         NULL,
-        false);
+        true);

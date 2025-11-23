@@ -192,6 +192,12 @@
     align-items: center;
 }
 
+.form-text {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
 textarea.form-control {
     min-height: 200px;
     font-family: monospace;

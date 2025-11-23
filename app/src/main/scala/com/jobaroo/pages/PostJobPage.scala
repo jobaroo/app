@@ -19,6 +19,7 @@ import tyrian.cmds.Logger
 import org.scalajs.dom.File
 import org.scalajs.dom.FileReader
 import scala.util.Try
+import com.jobaroo.core.Router
 
 final case class PostJobPage(
   company    : String = "",
@@ -40,26 +41,26 @@ final case class PostJobPage(
 
   import PostJobPage.*
 
-  override def view: Html[App.Msg] =
-    if Session.isActive then super.view else div(h1("Post Job"), div("You need to be logged in to post a job."))
+  override protected def renderFormContent(): List[Html[App.Msg]] =
+    if !Session.isActive then return List(p(`class` := "form-text")("You need to be logged in to post a job."))
 
-  override protected def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Company", "company", "text", true, UpdateCompany(_)),
-    renderInput("Title", "title", "text", true, UpdateTitle(_)),
-    renderTextArea("Description", "description", true, UpdateDescription(_)),
-    renderInput("ExternalUrl", "externalUrl", "text", true, UpdateExternalUrl(_)),
-    renderInput("Location", "location", "text", true, UpdateLocation(_)),
-    renderToggle("Remote", "remote", true, _ => ToggleRemote),
-    renderInput("SalaryLow", "salaryLow", "number", false, amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))),
-    renderInput("SalaryHigh", "salaryHigh", "number", false, amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))),
-    renderInput("Currency", "currency", "text", false, UpdateCurrency(_)),
-    renderInput("Country", "country", "text", false, UpdateCountry(_)),
-    renderInput("Tags", "tags", "text", false, UpdateTags(_)),
-    renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
-    renderInput("Seniority", "seniority", "text", false, UpdateSeniority(_)),
-    renderInput("Other", "other", "text", false, UpdateOther(_)),
-    button(`type` := "button", onClick(PostJob))("Post Job")
-  )
+    List(
+      renderInput("Company", "company", "text", true, UpdateCompany(_)),
+      renderInput("Title", "title", "text", true, UpdateTitle(_)),
+      renderTextArea("Description", "description", true, UpdateDescription(_)),
+      renderInput("ExternalUrl", "externalUrl", "text", true, UpdateExternalUrl(_)),
+      renderInput("Location", "location", "text", true, UpdateLocation(_)),
+      renderToggle("Remote", "remote", true, _ => ToggleRemote),
+      renderInput("SalaryLow", "salaryLow", "number", false, amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))),
+      renderInput("SalaryHigh", "salaryHigh", "number", false, amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))),
+      renderInput("Currency", "currency", "text", false, UpdateCurrency(_)),
+      renderInput("Country", "country", "text", false, UpdateCountry(_)),
+      renderInput("Tags", "tags", "text", false, UpdateTags(_)),
+      renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
+      renderInput("Seniority", "seniority", "text", false, UpdateSeniority(_)),
+      renderInput("Other", "other", "text", false, UpdateOther(_)),
+      button(`type` := "button", onClick(PostJob))("Post Job")
+    )
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateCompany(company)         => (this.copy(company = company), Cmd.None)
@@ -97,7 +98,7 @@ final case class PostJobPage(
           image = this.image,
           seniority = this.seniority,
           other = this.other
-        ))
+        )(promoted = true))
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
   private def setSuccessStatus(message: String): Page = this.copy(status = Some(Page.Status(message, Page.Kind.SUCCESS)))
@@ -130,13 +131,14 @@ object PostJobPage:
       location = constants.endpoints.createJob,
       method = Method.Post,
       onError = e => PostJobFailure(e.toString),
-      onResponse = resp =>
-        resp.status match
-          case Status(s, _) if s >= 200 && s < 300 => PostJobSuccess(resp.body)
-          case Status(s, _) if s >= 400 && s < 500 =>
-            parse(resp.body).flatMap(json => json.hcursor.get[String]("error")) match
-              case Left(e)      => PostJobFailure(s"Error: ${e.getMessage}")
-              case Right(value) => PostJobFailure(value)
+      onResponse = Endpoint.onResponse(onError = PostJobFailure(_), onSuccess = PostJobSuccess(_))
+    ) {}
+
+    val createJobPromoted = new Endpoint[App.Msg](
+      location = constants.endpoints.createJobPromoted,
+      method = Method.Post,
+      onError = e => PostJobFailure(e.toString),
+      onResponse = Endpoint.onResponse(onError = PostJobFailure(_), onSuccess = Router.ExternalRedirect(_))
     ) {}
 
   object commands:
@@ -168,7 +170,7 @@ object PostJobPage:
       image: Option[String],
       seniority: Option[String],
       other: Option[String]
-    ): Cmd[IO, App.Msg] =
+    )(promoted: Boolean = true): Cmd[IO, App.Msg] =
 
       val newJobInfo = JobInfo(
         company = company,
@@ -187,4 +189,5 @@ object PostJobPage:
         other = other
       )
 
-      endpoints.createJob.callAuthorized(newJobInfo)
+      val endpoint = if promoted then endpoints.createJobPromoted else endpoints.createJob
+      endpoint.callAuthorized(newJobInfo)
