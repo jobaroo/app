@@ -12,6 +12,7 @@ import doobie.postgres.implicits.*
 import cats.effect.MonadCancelThrow
 import com.jobaroo.domain.pagination.Pagination
 import org.typelevel.log4cats.*
+import fs2.Stream
 import com.jobaroo.logging.syntax.*
 import java.util.UUID
 import java.{util => ju}
@@ -22,7 +23,7 @@ trait Jobs[F[_]]:
   def update(id: UUID, jobInfo: JobInfo): F[Option[Job]]
   def delete(id: UUID): F[Int]
   def find(id: UUID): F[Option[Job]]
-  def all(): F[List[Job]]
+  def all(): Stream[F, Job]
   def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
   def possibleFilters(): F[JobFilter]
   def activate(id: UUID): F[Int]
@@ -142,7 +143,7 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
       .option
       .transact(xa)
 
-  override def all(): F[List[Job]] =
+  override def all(): Stream[F, Job] =
     sql"""
          SELECT
           id,
@@ -167,7 +168,7 @@ final class LiveJobs[F[_] : MonadCancelThrow : Logger] private (val xa: Transact
         WHERE active = true
        """
       .query[Job]
-      .to[List]
+      .stream
       .transact(xa)
 
   override def all(filter: JobFilter, pagination: Pagination): F[List[Job]] =

@@ -99,7 +99,7 @@ project/plugins/project/
 hs_err_pid*
 
 # Sketches and other stuff
-src/main/scala/dojo/*
+server/src/main/scala/dojo/*
 
 # Metals
 .metals/

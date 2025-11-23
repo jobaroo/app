@@ -10,6 +10,7 @@ import core.*
 import tyrian.TyrianApp
 import com.jobaroo.components.Header
 import com.jobaroo.pages.Page
+import com.jobaroo.components.Footer
 
 @JSExportTopLevel("JobarooApp")
 class App extends TyrianApp[App.Msg, App.Model]:
@@ -48,9 +49,10 @@ class App extends TyrianApp[App.Msg, App.Model]:
       (model.copy(page = newPage), cmd)
 
   override def view(model: Model): Html[Msg] =
-    div(
+    div(`class` := "app")(
       Header.view,
-      main(div(`class` := "container-fluid")(model.page.view))
+      main(div(`class` := "container-fluid")(model.page.view)),
+      Footer.view
     )
 
 object App:

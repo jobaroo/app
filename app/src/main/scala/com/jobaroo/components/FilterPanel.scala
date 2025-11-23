@@ -72,7 +72,7 @@ final case class FilterPanel(
           attribute("data-bs-parent", "#accordionFlushExample")
         )(
           div(`class` := "accordion-body p-0")(
-            div(`class` := "filter-panel-error")(optError.fold(div())(div(_))),
+            div(`class` := "page-status-error")(optError.fold(div())(div(_))),
             salaryFilter,
             renderRemoteCheckbox,
             checkboxGroup("Companies", jobFilters.companies),

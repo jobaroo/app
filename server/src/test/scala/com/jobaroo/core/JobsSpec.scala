@@ -48,7 +48,7 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
         val program =
           for
             jobs <- LiveJobs[IO](xa)
-            res  <- jobs.all()
+            res  <- jobs.all().compile.toList
           yield res
 
         program.asserting { _ shouldBe List(remoteSoftwareEngineerJob) }

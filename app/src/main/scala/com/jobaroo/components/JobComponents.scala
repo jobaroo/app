@@ -6,6 +6,7 @@ import com.jobaroo.App
 import com.jobaroo.domain.job.Job
 import com.jobaroo.core.Router
 import com.jobaroo.pages.Page.urls
+import com.jobaroo.common.constants
 
 object JobComponents:
 
@@ -14,7 +15,7 @@ object JobComponents:
       div(`class` := "jvm-recent-jobs-card-img")(
         img(
           `class` := "img-fluid",
-          src     := job.jobInfo.image.getOrElse(""),
+          src     := job.jobInfo.image.getOrElse(constants.fallbackImage),
           alt     := job.jobInfo.title
         )
       ),

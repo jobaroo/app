@@ -70,7 +70,7 @@ final case class JobPage(
           div(`class` := "jvm-jobs-details-card-profile-img")(
             img(
               `class` := "img-fluid",
-              src     := job.jobInfo.image.getOrElse(""),
+              src     := job.jobInfo.image.getOrElse(constants.fallbackImage),
               alt     := job.jobInfo.title
             )
           ),

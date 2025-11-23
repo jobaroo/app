@@ -23,6 +23,7 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import com.stripe.model.checkout.Session
 import com.stripe.param.checkout.SessionCreateParams
+import fs2.Stream
 
 import java.util.UUID
 import com.jobaroo.core.LiveStripe
@@ -53,7 +54,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
     override def find(id: UUID): IO[Option[Job]] =
       IO.pure(Option.when(id == berlinTechLeadJobId)(berlinTechLeadJob))
 
-    override def all(): IO[List[Job]] = IO.pure(berlinTechLeadJob :: Nil)
+    override def all(): Stream[IO, Job] = Stream.emit(berlinTechLeadJob)
 
     override def all(filter: JobFilter, pagination: Pagination): IO[List[Job]] =
       if filter.remote then IO.pure(Nil) else IO.pure(berlinTechLeadJob :: Nil)

@@ -8,11 +8,16 @@ object constants:
   @js.native
   @JSImport("url:/static/img/jobaroo.png", JSImport.Default)
   val logoImage: String = js.native
+  
+  @js.native
+  @JSImport("url:/static/img/fallback.png", JSImport.Default)
+  val fallbackImage: String = js.native
 
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""
 
   val defaultPageSize = 20
+  val jobAdvertPriceUSD = "99"
 
   object cookies:
 

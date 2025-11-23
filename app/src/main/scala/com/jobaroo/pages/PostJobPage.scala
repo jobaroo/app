@@ -17,9 +17,12 @@ import com.jobaroo.App.Msg
 import com.jobaroo.core.Session
 import tyrian.cmds.Logger
 import org.scalajs.dom.File
+import org.scalajs.dom.document
 import org.scalajs.dom.FileReader
 import scala.util.Try
 import com.jobaroo.core.Router
+import org.scalajs.dom.{HTMLCanvasElement, HTMLImageElement}
+import org.scalajs.dom.CanvasRenderingContext2D
 
 final case class PostJobPage(
   company    : String = "",
@@ -59,7 +62,9 @@ final case class PostJobPage(
       renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
       renderInput("Seniority", "seniority", "text", false, UpdateSeniority(_)),
       renderInput("Other", "other", "text", false, UpdateOther(_)),
-      button(`type` := "button", onClick(PostJob))("Post Job")
+      button(`class` := "form-submit-btn", `type` := "button", onClick(PostJob))(
+        "Post Job - $" + constants.jobAdvertPriceUSD
+      )
     )
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
@@ -149,11 +154,38 @@ object PostJobPage:
       optFile.traverse { file =>
         IO.async_ { cb =>
           val reader = new FileReader
-          reader.onload = _ => cb(Right(reader.result.toString))
+
+          reader.onload = _ =>
+            val img = document.createElement("img").asInstanceOf[HTMLImageElement]
+
+            img.addEventListener(
+              `type` = "load",
+              listener = _ =>
+                val canvas          = document.createElement("canvas").asInstanceOf[HTMLCanvasElement]
+                val ctx             = canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
+                val (width, height) = computeImageDimensions(img.width, img.height)
+                canvas.width = 256
+                canvas.height = 256
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+                cb(Right(canvas.toDataURL(file.`type`)))
+            )
+
+            img.src = reader.result.toString
+
           reader.readAsDataURL(file)
         }
       }
     )(UpdateImage(_))
+
+    private def computeImageDimensions(width: Int, height: Int): (Int, Int) =
+      if width >= height then
+        val ratio     = width * 1.0 / 256
+        val newWidth  = width / ratio;
+        val newHeight = width / ratio;
+        (newWidth.toInt, newHeight.toInt)
+      else computeImageDimensions(width = height, height = width).swap
 
     def postJob(
       company: String,

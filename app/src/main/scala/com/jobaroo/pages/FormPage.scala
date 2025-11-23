@@ -27,7 +27,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
         div(`class` := "form-section")(
           div(`class` := "top-section")(
             h1(span(title)),
-            status.fold(div())(s => div(`class` := "form-errors")(s.message))
+            status.fold(div())(s => div(`class` := "page-status-error")(s.message))
           ),
           form(
             name    := "sign-in",

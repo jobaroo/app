@@ -49,6 +49,9 @@ final case class JobListPage(
 
   override def view: Html[App.Msg] =
     section(`class` := "section-1")(
+      div(`class` := "container job-list-hero")(
+      h1(`class` := "job-list-title")("Jobaroo Jobs Board")
+      ),
       div(`class` := "container")(
         div(`class` := "row jvm-recent-jobs-body")(
           div(`class` := "col-lg-4")(
@@ -72,8 +75,8 @@ final case class JobListPage(
               onClick(LoadMoreJobs)
             )("Load more jobs")
           else div("All jobs loaded.")
-        case Kind.ERROR   => div(s.message)
-        case Kind.LOADING => div("Loading...")
+        case Kind.ERROR   => div(`class` := "page-status-error")(s.message)
+        case Kind.LOADING => div(`class` := "page-status-loading")("Loading...")
     )
   }
 
