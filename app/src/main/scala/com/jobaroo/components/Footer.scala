@@ -8,7 +8,7 @@ import com.jobaroo.common.constants
 import com.jobaroo.core.Session
 import com.jobaroo.pages.Page.*
 import com.jobaroo.tyrianui.core.UiAttrs
-import com.jobaroo.tyrianui.html.Tags.{aside, div, h3, img, nav, p}
+import com.jobaroo.tyrianui.html.Tags.{Children, aside, div, h3, img, nav, p}
 import com.jobaroo.ui.preset.Jobaroo
 
 object Footer:
@@ -42,6 +42,9 @@ object Footer:
     )
 
   private def footerColumn(title: String, children: Html[App.Msg]*): Html[App.Msg] =
-    val items = p(UiAttrs.classes(Jobaroo.footer.columnTitle))(text(title)) +: children.toSeq
-
-    nav(UiAttrs.classes(Jobaroo.footer.nav))(items*)
+    nav(UiAttrs.classes(Jobaroo.footer.nav))(
+      Children.concat(
+        Children.one(p(UiAttrs.classes(Jobaroo.footer.columnTitle))(text(title))),
+        children
+      )
+    )

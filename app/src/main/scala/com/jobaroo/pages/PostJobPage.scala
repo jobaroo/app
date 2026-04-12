@@ -23,7 +23,7 @@ import com.jobaroo.tyrianui.daisy.Badge
 import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Card
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.{div, form, h1, h2, h3, h4, img, li, p, ul}
+import com.jobaroo.tyrianui.html.Tags.{Children, div, form, h1, h2, h3, h4, img, li, p, ul}
 import com.jobaroo.tyrianui.icons.Icons
 import com.jobaroo.ui.preset.Jobaroo
 import org.scalajs.dom.CanvasRenderingContext2D
@@ -316,7 +316,9 @@ final case class PostJobPage(
         p(UiAttrs.classes(Jobaroo.post.editorCopy))(text(copy))
       )
 
-    div(UiAttrs.classes(Jobaroo.post.editorSection))((header +: children.toSeq)*)
+    div(UiAttrs.classes(Jobaroo.post.editorSection))(
+      Children.concat(Children.one(header), children)
+    )
 
   private def heroStat(value: String, label: String): Html[App.Msg] =
     div(UiAttrs.classes(Jobaroo.post.heroStat))(

@@ -15,7 +15,7 @@ import com.jobaroo.domain.job.*
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.{div, h2, h3, input, label, p, span}
+import com.jobaroo.tyrianui.html.Tags.{Children, div, h2, h3, input, label, p, span}
 import com.jobaroo.tyrianui.icons.Icons
 import com.jobaroo.ui.core.Css
 import com.jobaroo.ui.core.UiId
@@ -164,10 +164,13 @@ final case class FilterPanel(
     )
 
   private def filterSection(groupName: String)(children: Html[App.Msg]*): Html[App.Msg] =
-    val header = h3(UiAttrs.classes(Jobaroo.filter.sectionTitle))(text(groupName))
-    val parts  = header +: (searchField(groupName).toSeq ++ children.toSeq)
-
-    div(UiAttrs.classes(Jobaroo.filter.groupWrap))(parts*)
+    div(UiAttrs.classes(Jobaroo.filter.groupWrap))(
+      Children.concat(
+        Children.one(h3(UiAttrs.classes(Jobaroo.filter.sectionTitle))(text(groupName))),
+        Children.fromOption(searchField(groupName)),
+        children
+      )
+    )
 
   private def searchField(groupName: String): Option[Html[App.Msg]] =
     Option.when(isSearchable(groupName))(
