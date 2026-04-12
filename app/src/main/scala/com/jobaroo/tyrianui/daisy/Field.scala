@@ -28,6 +28,52 @@ object Field:
     hint    : Option[String] = None
   )
 
+  final case class Validation(
+    hint     : Option[String] = None,
+    pattern  : Option[String] = None,
+    title    : Option[String] = None,
+    minValue : Option[String] = None,
+    maxValue : Option[String] = None,
+    minLength: Option[Int] = None,
+    maxLength: Option[Int] = None,
+    useNative: Boolean = false
+  )
+
+  object Validation:
+
+    val none: Validation = Validation()
+
+    val email: Validation =
+      Validation(
+        hint = Some("Enter a valid email address."),
+        useNative = true
+      )
+
+    val url: Validation =
+      Validation(
+        hint = Some("Enter a full URL starting with http:// or https://."),
+        pattern = Some("""https?://.+"""),
+        title = Some("Enter a full URL starting with http:// or https://."),
+        useNative = true
+      )
+
+    def number(
+      minValue: Option[Int] = Some(0),
+      maxValue: Option[Int] = None,
+      hint: Option[String] = None
+    ): Validation =
+      Validation(
+        hint = hint,
+        minValue = minValue.map(_.toString),
+        maxValue = maxValue.map(_.toString),
+        useNative = minValue.nonEmpty || maxValue.nonEmpty
+      )
+
+    extension (validation: Validation)
+      def enabled: Boolean =
+        validation.useNative || validation.hint.nonEmpty || validation.pattern.nonEmpty || validation.title.nonEmpty ||
+          validation.minValue.nonEmpty || validation.maxValue.nonEmpty || validation.minLength.nonEmpty || validation.maxLength.nonEmpty
+
   object Meta:
 
     inline def static(
@@ -47,19 +93,22 @@ object Field:
     onValue: String => Msg,
     kind: InputKind = InputKind.Text,
     placeholderText: Option[String] = None,
+    autoCompleteHint: Option[String] = None,
     attrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     fieldAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     labelAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     hintAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
-    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg]
+    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
+    validation: Validation = Validation.none
   ): TyrianHtml[Msg] =
-    wrap(meta, fieldAttrs, labelAttrs, hintAttrs)(
+    wrap(meta, fieldAttrs, labelAttrs, hintAttrs, validation)(
       input(
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.inputBase |+| Css.literal(
-            "h-12 w-full rounded-[1.1rem] border-base-300 bg-base-200/70 px-4 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
-          )) |+|
+            "input-bordered h-10 w-full rounded-md border-base-300 bg-base-100 px-3 text-sm shadow-none focus:border-primary focus:outline-none"
+          ) |+| Css.literal("validator").when(validation.enabled)) |+|
+          validationAttrs(validation) |+|
           UiAttrs(
             id     := meta.id.value,
             `type` := kind.value,
@@ -67,6 +116,7 @@ object Field:
             onInput(onValue),
             required(meta.required)
           ) |+|
+          autoCompleteHint.map(value => UiAttrs(attribute("autocomplete", value))).getOrElse(UiAttrs.empty) |+|
           placeholderText.map(text => UiAttrs(placeholder := text)).getOrElse(UiAttrs.empty)
       )
     )
@@ -81,15 +131,17 @@ object Field:
     fieldAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     labelAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     hintAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
-    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg]
+    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
+    validation: Validation = Validation.none
   ): TyrianHtml[Msg] =
-    wrap(meta, fieldAttrs, labelAttrs, hintAttrs)(
+    wrap(meta, fieldAttrs, labelAttrs, hintAttrs, validation)(
       textarea(
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.textareaBase |+| Css.literal(
-            "min-h-56 w-full rounded-[1.25rem] border-base-300 bg-base-200/70 px-4 py-3 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
-          )) |+|
+            "textarea-bordered min-h-32 w-full rounded-md border-base-300 bg-base-100 px-3 py-3 text-sm shadow-none focus:border-primary focus:outline-none"
+          ) |+| Css.literal("validator").when(validation.enabled)) |+|
+          validationAttrs(validation) |+|
           UiAttrs(
             id := meta.id.value,
             onInput(onValue),
@@ -109,15 +161,17 @@ object Field:
     fieldAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     labelAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
     hintAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
-    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg]
+    controlAttrs: UiAttrs[Msg] = UiAttrs.empty[Msg],
+    validation: Validation = Validation.none
   ): TyrianHtml[Msg] =
-    wrap(meta, fieldAttrs, labelAttrs, hintAttrs)(
+    wrap(meta, fieldAttrs, labelAttrs, hintAttrs, validation)(
       select(
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.selectBase |+| Css.literal(
-            "h-12 w-full rounded-[1.1rem] border-base-300 bg-base-200/70 px-4 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
-          )) |+|
+            "select-bordered h-10 w-full rounded-md border-base-300 bg-base-100 px-3 text-sm shadow-none focus:border-primary focus:outline-none"
+          ) |+| Css.literal("validator").when(validation.enabled)) |+|
+          validationAttrs(validation) |+|
           UiAttrs(
             id := meta.id.value,
             onInput(onValue),
@@ -201,13 +255,25 @@ object Field:
     meta: Meta,
     fieldAttrs: UiAttrs[Msg],
     labelAttrs: UiAttrs[Msg],
-    hintAttrs: UiAttrs[Msg]
+    hintAttrs: UiAttrs[Msg],
+    validation: Validation
   )(control: TyrianHtml[Msg]): TyrianHtml[Msg] =
     fieldset(fieldAttrs)(
       label(UiAttrs(`for` := meta.id.value) |+| labelAttrs)(
         span()(text(meta.label)),
-        if meta.required then span()(text("*")) else div()
+        if meta.required then span()(text("*")) else span()()
       ),
       control,
+      validation.hint.fold(div()) { hint =>
+        p(UiAttrs.classes(Css.literal("validator-hint hidden text-xs text-error")))(text(hint))
+      },
       meta.hint.fold(div())(hint => p(hintAttrs)(text(hint)))
     )
+
+  private def validationAttrs[Msg](validation: Validation): UiAttrs[Msg] =
+    validation.pattern.map(value => UiAttrs(attribute("pattern", value))).getOrElse(UiAttrs.empty) |+|
+      validation.title.map(value => UiAttrs(attribute("title", value))).getOrElse(UiAttrs.empty) |+|
+      validation.minValue.map(value => UiAttrs(attribute("min", value))).getOrElse(UiAttrs.empty) |+|
+      validation.maxValue.map(value => UiAttrs(attribute("max", value))).getOrElse(UiAttrs.empty) |+|
+      validation.minLength.map(value => UiAttrs(attribute("minlength", value.toString))).getOrElse(UiAttrs.empty) |+|
+      validation.maxLength.map(value => UiAttrs(attribute("maxlength", value.toString))).getOrElse(UiAttrs.empty)

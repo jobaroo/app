@@ -28,6 +28,15 @@ final case class SignUpPage(
 
   import SignUpPage.*
 
+  override protected def marketingSubtitle: String =
+    "Create one account for job discovery, saved applications, and employer-facing posting flows."
+  override protected def marketingStats: List[(String, String)] = List(
+    "Candidate ready" -> "Start browsing and applying without learning a crowded product first.",
+    "Recruiter ready" -> "Use the same identity to publish roles and manage job updates later."
+  )
+  override protected def sectionSubtitle: String =
+    "Create your Jobaroo account to browse roles, post jobs, and manage your hiring profile."
+
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)                     => (this.copy(email = email), Cmd.None)
     case UpdatePassword(password)               => (this.copy(password = password), Cmd.None)

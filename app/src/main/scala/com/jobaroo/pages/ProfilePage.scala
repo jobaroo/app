@@ -24,6 +24,16 @@ final case class ProfilePage(oldPassword: String = "", newPassword: String = "",
 
   import ProfilePage.*
 
+  override protected def marketingSubtitle: String =
+    "Keep your account secure and up to date without leaving the focused hiring workspace."
+  override protected def marketingStats: List[(String, String)] = List(
+    "Security first" -> "Use a dedicated password update flow instead of hiding security inside settings clutter.",
+    "One identity" -> "The same account powers browsing, applying, and recruiter activity."
+  )
+  override protected def sectionEyebrow: String = "Password security"
+  override protected def sectionSubtitle: String =
+    "Update your password here to keep access secure across browsing and recruiter workflows."
+
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateNewPassword(newPassword) => (this.copy(newPassword = newPassword), Cmd.None)
     case UpdateOldPassword(oldPassword) => (this.copy(oldPassword = oldPassword), Cmd.None)

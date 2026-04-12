@@ -91,7 +91,7 @@ object Button:
     val classes =
       Daisy.groups.buttonBase |+|
         Css.literal(
-          "rounded-[1.1rem] border border-transparent px-4 text-sm font-bold shadow-none transition duration-200 hover:-translate-y-0.5"
+          "rounded-md border px-4 text-sm font-medium normal-case shadow-none transition hover:brightness-[0.98]"
         ) |+|
         props.tone.classes |+|
         props.size.classes |+|

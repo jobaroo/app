@@ -12,7 +12,7 @@ object constants:
   val logoImage: String = js.native
 
   @js.native
-  @JSImport("url:/static/img/fallback.png", JSImport.Default)
+  @JSImport("url:/static/img/fallback.svg", JSImport.Default)
   val fallbackImage: String = js.native
 
   val emailRegex =

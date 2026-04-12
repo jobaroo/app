@@ -21,6 +21,15 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
 
   import LoginPage.*
 
+  override protected def marketingSubtitle: String =
+    "Pick up where you left off, whether you are browsing roles or managing recruiter workflows."
+  override protected def marketingStats: List[(String, String)] = List(
+    "Fast access" -> "Return to saved browsing and recruiter actions with one login.",
+    "Secure session" -> "Keep account access focused on hiring without extra dashboard noise."
+  )
+  override protected def sectionSubtitle: String =
+    "Sign in to browse jobs, manage your profile, and continue recruiter workflows."
+
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateEmail(email)       => (this.copy(email = email), Cmd.None)
     case UpdatePassword(password) => (this.copy(password = password), Cmd.None)

@@ -8,10 +8,9 @@ import com.jobaroo.common.constants
 import com.jobaroo.core.*
 import com.jobaroo.pages.Page.*
 import com.jobaroo.tyrianui.core.UiAttrs
-import com.jobaroo.tyrianui.daisy.Button
-import com.jobaroo.tyrianui.daisy.Navigation
-import com.jobaroo.tyrianui.html.Tags.{a, button, div, h1, img, p, span}
+import com.jobaroo.tyrianui.html.Tags.{a, button, div, img, li, p, span, ul}
 import com.jobaroo.tyrianui.icons.Icons
+import com.jobaroo.ui.core.Css
 import com.jobaroo.ui.preset.Jobaroo
 import com.jobaroo.ui.theme.ThemeName
 import org.scalajs.dom
@@ -19,53 +18,42 @@ import org.scalajs.dom
 object Header:
 
   def view: Html[App.Msg] =
-    Navigation.navbar(UiAttrs.classes(Jobaroo.nav.sticky |+| Jobaroo.nav.navbar))(
-      div(UiAttrs.classes(Jobaroo.nav.start))(
-        logo,
-        div(UiAttrs.classes(Jobaroo.nav.desktopCopy))(
-          p(UiAttrs.classes(Jobaroo.nav.subtitle))(text("Focused hiring")),
-          h1(UiAttrs.classes(Jobaroo.nav.title))(text("Jobaroo"))
-        )
-      ),
-      div(UiAttrs.classes(Jobaroo.nav.center))(
-        Navigation.menu[App.Msg](UiAttrs.classes(Jobaroo.nav.menu))(renderNavLinks()*)
-      ),
-      div(UiAttrs.classes(Jobaroo.nav.end))(
-        themeToggle,
-        sessionActions
-      )
-    )
-
-  private def renderNavLinks(): List[Html[App.Msg]] =
-    val constantLinks = List(
-      navMenuLink("Jobs", urls.jobs),
-      navMenuLink("Post Job", urls.postJob)
-    )
-
-    val unauthedLinks = List(
-      navMenuLink("Sign Up", urls.signup),
-      navMenuLink("Login", urls.login)
-    )
-
-    val authedLinks = List(
-      navMenuLink("Profile", urls.profile),
-      Navigation.menuItem(
-        button(UiAttrs.classes(Jobaroo.nav.link) |+| UiAttrs(onClick(Session.Logout)))(
-          text("Log Out")
+    div(UiAttrs.classes(Jobaroo.nav.outer))(
+      div(UiAttrs.classes(Jobaroo.nav.navbar))(
+        div(UiAttrs.classes(Jobaroo.nav.start))(logo),
+        div(UiAttrs.classes(Jobaroo.nav.center))(
+          navLink("Jobs", urls.jobs, Jobaroo.nav.link, Some(Icons.briefcase(Jobaroo.icon.small))),
+          navLink("Post Job", urls.postJob, Css.literal("btn btn-primary btn-sm font-medium normal-case"), Some(Icons.plus(Jobaroo.icon.small)))
+        ),
+        div(UiAttrs.classes(Jobaroo.nav.end))(
+          themeToggle,
+          sessionActions,
+          mobileMenu
         )
       )
     )
 
-    constantLinks ++ (if Session.isActive then authedLinks else unauthedLinks)
+  private def navLink(
+    label: String,
+    location: String,
+    classes: Css,
+    icon: Option[Html[App.Msg]] = None
+  ): Html[App.Msg] =
+    val attrs =
+      UiAttrs(href := location) |+|
+        UiAttrs.classes(classes) |+|
+        UiAttrs(
+          onEvent(
+            "click",
+            e =>
+              e.preventDefault()
+              (Router.ChangeLocation(location): App.Msg)
+          )
+        )
 
-  private def navMenuLink(textValue: String, location: String): Html[App.Msg] =
-    Navigation.menuItem(
-      Anchors.renderNavLink(
-        text = textValue,
-        location = location,
-        classes = Jobaroo.nav.link
-      )(Router.ChangeLocation(_))
-    )
+    val children = icon.toSeq :+ span()(text(label))
+
+    a[App.Msg](attrs)(children*)
 
   private def logo: Html[App.Msg] =
     val attrs =
@@ -82,15 +70,12 @@ object Header:
 
     a(attrs)(
       img(UiAttrs.classes(Jobaroo.nav.logoImage) |+| UiAttrs(src := constants.logoImage, alt := "Jobaroo")),
-      div(UiAttrs.classes(Jobaroo.nav.logoCopy))(
-        p(UiAttrs.classes(Jobaroo.nav.subtitle))(text("JVM roles")),
-        p(UiAttrs.classes(Jobaroo.nav.logoTitle))(text("Jobaroo"))
-      )
+      span(UiAttrs.classes(Jobaroo.nav.logoTitle))(text("Jobaroo"))
     )
 
   private def themeToggle: Html[App.Msg] =
     val attrs =
-      UiAttrs(`type` := "button") |+|
+      UiAttrs(`type` := "button", attribute("aria-label", "Toggle theme")) |+|
         UiAttrs.classes(Jobaroo.nav.themeBtn) |+|
         UiAttrs(
           onEvent(
@@ -116,35 +101,51 @@ object Header:
     val actions =
       if Session.isActive then
         List(
-          Button.render(
-            Button.props[App.Msg]("Profile").copy(
-              tone = Button.Tone.Ghost,
-              attrs = UiAttrs.classes(Jobaroo.button.ghostSurface),
-              onPress = Some(Router.ChangeLocation(urls.profile))
-            )
-          ),
-          Button.render(
-            Button.props[App.Msg]("Log Out").copy(
-              tone = Button.Tone.Primary,
-              onPress = Some(Session.Logout)
-            )
-          )
+          navLink("Profile", urls.profile, Jobaroo.nav.link),
+          button(
+            UiAttrs(`type` := "button") |+|
+              UiAttrs.classes(Css.literal("btn btn-primary btn-sm font-medium normal-case")) |+|
+              UiAttrs(onClick(Session.Logout))
+          )(text("Log Out"))
         )
       else
         List(
-          Button.render(
-            Button.props[App.Msg]("Login").copy(
-              tone = Button.Tone.Ghost,
-              attrs = UiAttrs.classes(Jobaroo.button.ghostSurface),
-              onPress = Some(Router.ChangeLocation(urls.login))
-            )
-          ),
-          Button.render(
-            Button.props[App.Msg]("Sign Up").copy(
-              tone = Button.Tone.Primary,
-              onPress = Some(Router.ChangeLocation(urls.signup))
-            )
-          )
+          navLink("Login", urls.login, Jobaroo.nav.link),
+          navLink("Sign Up", urls.signup, Css.literal("btn btn-primary btn-sm font-medium normal-case"))
         )
 
     div(UiAttrs.classes(Jobaroo.nav.sessionRow))(actions*)
+
+  private def mobileMenu: Html[App.Msg] =
+    val items =
+      List(
+        mobileItem("Browse Jobs", urls.jobs),
+        mobileItem("Post a Job", urls.postJob)
+      ) ++
+        (if Session.isActive then
+           List(
+             mobileItem("Profile", urls.profile),
+             li()(
+               button(
+                 UiAttrs(`type` := "button") |+| UiAttrs.classes(Css.literal("w-full text-left")) |+| UiAttrs(onClick(Session.Logout))
+               )(text("Log Out"))
+             )
+           )
+         else
+           List(
+             mobileItem("Login", urls.login),
+             mobileItem("Sign Up", urls.signup)
+           ))
+
+    div(UiAttrs.classes(Jobaroo.nav.mobileMenu))(
+      button(
+        UiAttrs(attribute("tabindex", "0"), attribute("aria-label", "Open menu"), `type` := "button") |+|
+          UiAttrs.classes(Jobaroo.nav.mobileMenuButton)
+      )(Icons.bars3(Jobaroo.icon.regular)),
+      ul(UiAttrs(attribute("tabindex", "0")) |+| UiAttrs.classes(Jobaroo.nav.mobileDropdown))(items*)
+    )
+
+  private def mobileItem(label: String, location: String): Html[App.Msg] =
+    li()(
+      navLink(label, location, Css.literal("font-medium"))
+    )

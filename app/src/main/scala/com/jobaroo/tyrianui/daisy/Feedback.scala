@@ -25,7 +25,7 @@ object Feedback:
     val allAttrs =
       attrs |+| UiAttrs.classes(
         Daisy.groups.alertBase |+| Css.literal(
-          "items-start gap-3 rounded-[1.25rem] border border-base-300 bg-base-100 px-4 py-4 text-sm leading-6 shadow-none"
+          "items-start gap-3 rounded-lg border border-base-300 bg-base-100 px-4 py-4 text-sm leading-6 shadow-none"
         ) |+| tone.classes
       )
 

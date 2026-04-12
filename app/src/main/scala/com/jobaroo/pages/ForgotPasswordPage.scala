@@ -20,6 +20,15 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
 
   import ForgotPasswordPage.*
 
+  override protected def marketingSubtitle: String =
+    "Recover account access quickly and return to the hiring flow without guesswork."
+  override protected def marketingStats: List[(String, String)] = List(
+    "Fast recovery" -> "Send the recovery email in one step and move straight to token-based reset.",
+    "No dead ends" -> "Keep the reset path obvious so candidates and recruiters do not get stranded."
+  )
+  override protected def sectionSubtitle: String =
+    "Enter the email tied to your Jobaroo account and we will send the recovery link."
+
   override def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "email", true, email, UpdateEmail(_)),
     renderPrimaryAction("Send Recovery Email", ResetPassword),

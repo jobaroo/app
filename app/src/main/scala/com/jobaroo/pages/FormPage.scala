@@ -7,6 +7,7 @@ import tyrian.Html.*
 import com.jobaroo.App
 import com.jobaroo.components.AppLayout
 import org.scalajs.dom.*
+import org.scalajs.dom.HTMLButtonElement
 import org.scalajs.dom.HTMLInputElement
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.daisy.Button
@@ -14,6 +15,7 @@ import com.jobaroo.tyrianui.daisy.Card
 import com.jobaroo.tyrianui.daisy.Field
 import com.jobaroo.tyrianui.daisy.Feedback
 import com.jobaroo.tyrianui.html.Tags.{div, fieldset, form, h1, img, label, p}
+import com.jobaroo.ui.core.Css
 import com.jobaroo.ui.core.UiId
 import com.jobaroo.ui.preset.Jobaroo
 
@@ -25,28 +27,42 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
 
   protected def renderFormContent(): List[Html[App.Msg]]
 
+  protected def backFallback: String = Page.urls.home
+  protected def accountEyebrow: String = "Jobaroo Account"
+  protected def marketingSubtitle: String =
+    "Manage login, recovery, and recruiter access from a calm, focused account surface."
+  protected def marketingStats: List[(String, String)] = List(
+    "Fast setup" -> "Move through account flows without leaving the current hiring workflow.",
+    "One account" -> "Use the same identity for browsing, posting, and profile management."
+  )
+  protected def sectionEyebrow: String = "Account access"
+  protected def sectionSubtitle: String =
+    "Use your Jobaroo account to sign in, recover access, or manage recruiter settings."
+
   protected def renderForm(): Html[App.Msg] =
     AppLayout.pageContainer(
-      div(UiAttrs.classes(Jobaroo.form.scaffold))(
+      div(UiAttrs.classes(Jobaroo.form.page))(
+        div(UiAttrs.classes(Jobaroo.form.backRow))(
+          AppLayout.backLink(fallback = backFallback)
+        ),
         div(UiAttrs.classes(Jobaroo.form.marketing))(
           div(UiAttrs.classes(Jobaroo.form.marketingText))(
-            p(UiAttrs.classes(Jobaroo.form.marketingEyebrow))(text("Jobaroo Account")),
+            p(UiAttrs.classes(Jobaroo.form.marketingEyebrow))(text(accountEyebrow)),
             h1(UiAttrs.classes(Jobaroo.form.marketingTitle))(text(title)),
-            p(UiAttrs.classes(Jobaroo.form.marketingSubtitle))(
-              text("Move through account and recruiter tasks with a calmer interface, clearer hierarchy, and less friction.")
-            )
+            p(UiAttrs.classes(Jobaroo.form.marketingSubtitle))(text(marketingSubtitle))
           ),
           div(UiAttrs.classes(Jobaroo.form.marketingStats))(
-            statCard("Focused", "Stay on the task with clean forms, strong hierarchy, and direct feedback."),
-            statCard("Reliable", "The same account powers browsing, posting, and recruiter workflows.")
+            marketingStats.map { case (statTitle, description) =>
+              statCard(statTitle, description)
+            }*
           )
         ),
-        Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.fullHeight))(
-          Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
-            AppLayout.sectionTitle("Account access", title, "Use your Jobaroo account to manage hiring and profile settings in one place."),
+        Card.surface(UiAttrs.classes(Jobaroo.form.formCard))(
+          Card.body(UiAttrs.classes(Jobaroo.surface.bodyComfortable))(
+            AppLayout.sectionTitle(sectionEyebrow, title, sectionSubtitle),
             renderStatus,
             form(
-              UiAttrs(name := "sign-in", id := "form") |+|
+              UiAttrs(name := "account-form", id := "form") |+|
                 UiAttrs.classes(Jobaroo.form.grid) |+|
                 UiAttrs(
                   onEvent(
@@ -82,7 +98,14 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
     Button.render(
       Button.props[App.Msg](label).copy(
         width = Button.Width.Full,
-        onPress = Some(onPress)
+        attrs = UiAttrs(
+          onEvent(
+            "click",
+            event =>
+              val form = event.target.asInstanceOf[HTMLButtonElement].form
+              if form == null || form.reportValidity() then onPress else App.NoOp
+          )
+        )
       )
     )
 
@@ -92,7 +115,8 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
     kind: String,
     isRequired: Boolean,
     currentValue: String = "",
-    onChange: String => App.Msg
+    onChange: String => App.Msg,
+    validation: Field.Validation = Field.Validation.none
   ): Html[App.Msg] =
     val fieldKind = kind match
       case "email"    => Field.InputKind.Email
@@ -101,14 +125,28 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       case "url"      => Field.InputKind.Url
       case _          => Field.InputKind.Text
 
+    val resolvedValidation =
+      if validation != Field.Validation.none then validation
+      else
+        kind match
+          case "email"  => Field.Validation.email
+          case "url"    => Field.Validation.url
+          case "number" => Field.Validation.number()
+          case _        => Field.Validation.none
+
+    val autoCompleteHint =
+      autocompleteFor(uid, kind)
+
     Field.textInput(
       meta = Field.Meta.dynamic(UiId.sanitized(uid), name, required = isRequired),
       currentValue = currentValue,
       onValue = onChange,
       kind = fieldKind,
+      autoCompleteHint = autoCompleteHint,
       fieldAttrs = UiAttrs.classes(Jobaroo.form.compactFieldset),
       labelAttrs = UiAttrs.classes(Jobaroo.form.fieldLabel),
-      hintAttrs = UiAttrs.classes(Jobaroo.form.fieldHint)
+      hintAttrs = UiAttrs.classes(Jobaroo.form.fieldHint),
+      validation = resolvedValidation
     )
 
   protected def renderToggle(
@@ -123,11 +161,10 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       meta = Field.Meta.dynamic(UiId.sanitized(uid), name, required = isRequired, hint = hint),
       checkedValue = checkedValue,
       onChangeValue = onChange,
-      wrapperAttrs = UiAttrs.classes(Jobaroo.form.fileLabel),
+      wrapperAttrs = UiAttrs.classes(Css.literal("flex items-center justify-between rounded-lg bg-base-200 p-4")),
       copyAttrs = UiAttrs.classes(Jobaroo.form.fileCopy),
       titleAttrs = UiAttrs.classes(Jobaroo.form.fileTitle),
-      hintAttrs = UiAttrs.classes(Jobaroo.form.fileDescription),
-      controlAttrs = UiAttrs.classes(Jobaroo.button.ghostSurface)
+      hintAttrs = UiAttrs.classes(Jobaroo.form.fileDescription)
     )
 
   protected def renderTextArea(
@@ -135,7 +172,8 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
     uid: String,
     isRequired: Boolean,
     currentValue: String = "",
-    onChange: String => App.Msg
+    onChange: String => App.Msg,
+    validation: Field.Validation = Field.Validation.none
   ): Html[App.Msg] =
     Field.textAreaField(
       meta = Field.Meta.dynamic(UiId.sanitized(uid), name, required = isRequired),
@@ -143,7 +181,8 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       onValue = onChange,
       fieldAttrs = UiAttrs.classes(Jobaroo.form.compactFieldset),
       labelAttrs = UiAttrs.classes(Jobaroo.form.fieldLabel),
-      hintAttrs = UiAttrs.classes(Jobaroo.form.fieldHint)
+      hintAttrs = UiAttrs.classes(Jobaroo.form.fieldHint),
+      validation = validation
     )
 
   protected def renderImageUploadInput(
@@ -163,7 +202,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       label(UiAttrs.classes(Jobaroo.form.fileLabel))(
         div(UiAttrs.classes(Jobaroo.form.fileCopy))(
           p(UiAttrs.classes(Jobaroo.form.fileTitle))(text("Upload company logo")),
-          p(UiAttrs.classes(Jobaroo.form.fileDescription))(text("Use a clear square logo for the strongest card preview."))
+          p(UiAttrs.classes(Jobaroo.form.fileDescription))(text("PNG, JPG, or SVG. Used in the listing preview and job cards."))
         ),
         com.jobaroo.tyrianui.html.Tags.input(
           UiAttrs(`type` := "file", id := uid, accept := "image/*") |+|
@@ -192,3 +231,16 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       yield eff
 
     Cmd.Run[IO, Unit, App.Msg](effect.map(_.foreach(_.reset())))(_ => App.NoOp)
+
+  private def autocompleteFor(uid: String, kind: String): Option[String] =
+    val normalized = uid.trim.toLowerCase
+
+    kind match
+      case "email"    => Some("email")
+      case "password" => Some(if normalized.contains("new") then "new-password" else "current-password")
+      case "url"      => Some("url")
+      case _ if normalized.contains("company")  => Some("organization")
+      case _ if normalized.contains("title")    => Some("organization-title")
+      case _ if normalized.contains("country")  => Some("country-name")
+      case _ if normalized.contains("location") => Some("address-level2")
+      case _ => None

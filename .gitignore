@@ -106,3 +106,5 @@ dojo/*
 .bloop/
 .scala-build/
 metals.sbt
+.playwright/
+.playwright-cli/

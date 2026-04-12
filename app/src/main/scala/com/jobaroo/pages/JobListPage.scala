@@ -18,10 +18,9 @@ import com.jobaroo.domain.job.*
 import com.jobaroo.pages.JobListPage.FilterJobs
 import com.jobaroo.pages.Page.Kind
 import com.jobaroo.tyrianui.core.UiAttrs
-import com.jobaroo.tyrianui.daisy.Badge
 import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.div
+import com.jobaroo.tyrianui.html.Tags.{div, h2, p}
 import com.jobaroo.ui.preset.Jobaroo
 
 final case class JobListPage(
@@ -50,28 +49,25 @@ final case class JobListPage(
 
   override def view: Html[App.Msg] =
     AppLayout.pageContainer(
-      AppLayout.hero(
-        title = "Discover JVM roles that are easy to scan and worth your time.",
-        subtitle = "Search curated Scala, Java, and backend openings with clearer compensation, cleaner filters, and calmer browsing.",
-        eyebrow = "Jobaroo Market",
-        actions = Seq(
-          Badge.render(s"${jobs.length} live roles", Badge.Tone.Primary),
-          Badge.render("Backend teams", Badge.Tone.Outline)
-        )
-      ),
-      AppLayout.split(
-        sidebar = filterPanel.view,
-        content = div(UiAttrs.classes(Jobaroo.shell.stack))(
-          div(UiAttrs.classes(Jobaroo.jobs.toolbar))(
-            AppLayout.sectionTitle(
-              eyebrow = "Live board",
-              title = "Open roles for serious backend teams",
-              subtitle = "Browse by company, location, seniority, and compensation without losing the thread."
+      div(UiAttrs.classes(Jobaroo.jobs.page))(
+        AppLayout.split(
+          sidebar = filterPanel.view,
+          content = div(UiAttrs.classes(Jobaroo.shell.stack))(
+            div(UiAttrs.classes(Jobaroo.jobs.boardHeader))(
+              div(UiAttrs.classes(Jobaroo.jobs.boardHeaderRow))(
+                div(UiAttrs.classes(Jobaroo.jobs.boardHeading))(
+                  p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Talent board")),
+                  h2(UiAttrs.classes(Jobaroo.jobs.boardTitle))(text("Open roles, laid out for fast scanning.")),
+                  p(UiAttrs.classes(Jobaroo.jobs.boardSubtitle))(
+                    text("Use the filter rail to narrow by company, location, salary, remote status, tags, and seniority.")
+                  )
+                )
+              )
             ),
-            div(UiAttrs.classes(Jobaroo.jobs.statPill))(text(s"${jobs.length} visible roles"))
-          ),
-          div(UiAttrs.classes(Jobaroo.shell.gridGap5))(
-            (jobs.map(JobComponents.renderJob) :+ renderLoadMore)*
+            div(UiAttrs.classes(Jobaroo.shell.gridGap5))(
+              jobs.map(JobComponents.renderJob)*
+            ),
+            renderLoadMore
           )
         )
       )
@@ -84,7 +80,7 @@ final case class JobListPage(
           case Kind.SUCCESS =>
             if canLoadMore then
               Button.render(
-                Button.props[App.Msg]("Load More Roles").copy(
+                Button.props[App.Msg]("Load More Jobs").copy(
                   tone = Button.Tone.Primary,
                   onPress = Some(LoadMoreJobs)
                 )
@@ -96,7 +92,6 @@ final case class JobListPage(
       )
     case None    => div()
 
-  // TODO - too lose
   def parseJobFilters(filters: Map[String, Set[String]]): JobFilter =
     new JobFilter(
       companies = filters.getOrElse("Companies", Set.empty).toList,

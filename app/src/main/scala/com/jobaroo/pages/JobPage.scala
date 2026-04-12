@@ -16,14 +16,17 @@ import com.jobaroo.common.Endpoint
 import com.jobaroo.common.constants
 import com.jobaroo.components.AppLayout
 import com.jobaroo.components.JobComponents
+import com.jobaroo.components.PreviewText
 import com.jobaroo.domain.job.Job
 import com.jobaroo.pages.Page.Kind
+import com.jobaroo.pages.Page.urls
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.daisy.Badge
 import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Card
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.{div, h1, img, p}
+import com.jobaroo.tyrianui.html.Tags.{div, h1, h2, li, p, ul}
+import com.jobaroo.tyrianui.icons.Icons
 import com.jobaroo.ui.preset.Jobaroo
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
@@ -60,59 +63,85 @@ final case class JobPage(
     )
 
   private def renderJobPage(job: Job): Html[App.Msg] =
-    val roleBadges =
-      Badge.render(if job.jobInfo.remote then "Remote" else "On-site", if job.jobInfo.remote then Badge.Tone.Primary else Badge.Tone.Outline) ::
-        job.jobInfo.seniority.toList.map(value => Badge.render(value, Badge.Tone.Outline))
+    val tagBadges     = job.jobInfo.tags.getOrElse(Nil).take(6).map(tag => Badge.render(tag, Badge.Tone.Outline))
+    val relativeTime  = MomentLib.unix(job.date / 1_000L).fromNow().toString
+    val markdownHtml  = renderMarkdownHtml(job)
+    val roleSummary   = PreviewText.fromMarkdown(PreviewText.withoutLeadingTitle(job.jobInfo.description, job.jobInfo.title))
 
     AppLayout.pageContainer(
-      Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
-        Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
-          div(UiAttrs.classes(Jobaroo.jobs.cardLayoutDetail))(
-            div(UiAttrs.classes(Jobaroo.jobs.copyColumnLarge))(
-              div(UiAttrs.classes(Jobaroo.jobs.previewRowLarge))(
-                div(UiAttrs.classes(Jobaroo.jobs.avatarWrap))(
-                  div(UiAttrs.classes(Jobaroo.jobs.avatarFrameLarge))(
-                    img(
-                      UiAttrs(src := job.jobInfo.image.getOrElse(constants.fallbackImage), alt := job.jobInfo.title) |+|
-                        UiAttrs.classes(Jobaroo.jobs.avatarImageLarge)
-                    )
-                  )
-                ),
-                div(UiAttrs.classes(Jobaroo.jobs.copyColumnLarge))(
-                  p(UiAttrs.classes(Jobaroo.jobs.companyWide))(text(job.jobInfo.company)),
-                  h1(UiAttrs.classes(Jobaroo.jobs.detailTitle))(text(job.jobInfo.title)),
-                  div(UiAttrs.classes(Jobaroo.jobs.metaRow))(
-                    roleBadges*
-                  )
-                )
-              ),
-              JobComponents.renderJobSummary(job),
-              div(UiAttrs.classes(Jobaroo.jobs.metaRow))(
-                job.jobInfo.tags.getOrElse(Nil).take(5).map(tag => Badge.render(tag, Badge.Tone.Outline))*
+      div(UiAttrs.classes(Jobaroo.jobs.detailHero))(
+        div(UiAttrs.classes(Jobaroo.jobs.detailHeroInner))(
+          div(UiAttrs.classes(Jobaroo.jobs.detailLead))(
+            div(UiAttrs.classes(Jobaroo.jobs.detailBackRow))(
+              AppLayout.backLink(fallback = urls.jobs, classes = Jobaroo.section.backLinkInverse)
+            ),
+            p(UiAttrs.classes(Jobaroo.jobs.companyWide))(text(job.jobInfo.company)),
+            h1(UiAttrs.classes(Jobaroo.jobs.detailHeroTitle))(text(job.jobInfo.title)),
+            p(UiAttrs.classes(Jobaroo.jobs.detailHeroCopy))(
+              text(
+                if roleSummary.nonEmpty then roleSummary.take(190)
+                else "A focused JVM role on Jobaroo with the full description and application action below."
               )
             ),
-            div(UiAttrs.classes(Jobaroo.jobs.actionsStack))(
-              p(UiAttrs.classes(Jobaroo.jobs.detailTime))(text(MomentLib.unix(job.date / 1_000L).fromNow().toString)),
+            if tagBadges.nonEmpty then div(UiAttrs.classes(Jobaroo.jobs.detailHeroTags))(tagBadges*)
+            else div()
+          ),
+          div(UiAttrs.classes(Jobaroo.jobs.detailHeroActions))(
+            div(UiAttrs.classes(Jobaroo.jobs.detailHeroCard))(
+              p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Apply now")),
+              h2(UiAttrs.classes(Jobaroo.jobs.detailSectionTitle))(text("Take the next step")),
+              p(UiAttrs.classes(Jobaroo.jobs.detailSectionCopy))(text("Use the employer link to continue the application outside Jobaroo.")),
               Button.link(
                 Button.props[App.Msg]("Apply on Site").copy(
-                  tone = Button.Tone.Primary
+                  tone = Button.Tone.Primary,
+                  width = Button.Width.Full
                 ),
                 hrefValue = job.jobInfo.externalUrl,
                 newTab = true
               )
             )
-          ),
-          renderMarkdown(job)
+          )
+        )
+      ),
+      div(UiAttrs.classes(Jobaroo.jobs.detailGrid))(
+        div(UiAttrs.classes(Jobaroo.jobs.detailMain))(
+          Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
+            Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
+              div(UiAttrs.classes(Jobaroo.jobs.detailSection))(
+                p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Description")),
+                h2(UiAttrs.classes(Jobaroo.jobs.detailSectionTitle))(text("About the role")),
+                div(UiAttrs.classes(Jobaroo.markdown.prose))().innerHtml(markdownHtml)
+              )
+            )
+          )
+        ),
+        div(UiAttrs.classes(Jobaroo.jobs.detailRail))(
+          Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
+            Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
+              p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Role facts")),
+              h2(UiAttrs.classes(Jobaroo.jobs.detailSectionTitle))(text("Everything important, once")),
+              ul(UiAttrs.classes(Jobaroo.jobs.detailList))(
+                detailItem(if job.jobInfo.remote then Icons.globe(Jobaroo.icon.small) else Icons.mapPin(Jobaroo.icon.small), JobComponents.locationText(job)),
+                detailItem(Icons.banknotes(Jobaroo.icon.small), JobComponents.salaryText(job)),
+                detailItem(Icons.briefcase(Jobaroo.icon.small), job.jobInfo.seniority.getOrElse("Open seniority")),
+                detailItem(Icons.document(Jobaroo.icon.small), s"Posted $relativeTime")
+              )
+            )
+          )
         )
       )
     )
 
-  private def renderMarkdown(job: Job): Html[App.Msg] =
-    val htmlText = markdownTransformer.transform(job.jobInfo.description) match
+  private def renderMarkdownHtml(job: Job): String =
+    markdownTransformer.transform(PreviewText.withoutLeadingTitle(job.jobInfo.description, job.jobInfo.title)) match
       case Left(_)     => "error"
       case Right(html) => html
 
-    div(UiAttrs.classes(Jobaroo.markdown.prose))().innerHtml(htmlText)
+  private def detailItem(icon: Html[App.Msg], value: String): Html[App.Msg] =
+    li(UiAttrs.classes(Jobaroo.jobs.detailListItem))(
+      icon,
+      p()(text(value))
+    )
 
   val markdownTransformer = Transformer.from(Markdown).to(HTML).build
 

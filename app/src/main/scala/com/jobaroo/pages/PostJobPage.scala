@@ -17,11 +17,14 @@ import com.jobaroo.components.PreviewText
 import com.jobaroo.core.Router
 import com.jobaroo.core.Session
 import com.jobaroo.domain.job.*
+import com.jobaroo.pages.Page.urls
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.daisy.Badge
+import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Card
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.{div, form, h3, h4, img, li, p, ul}
+import com.jobaroo.tyrianui.html.Tags.{div, form, h1, h2, h3, h4, img, li, p, ul}
+import com.jobaroo.tyrianui.icons.Icons
 import com.jobaroo.ui.preset.Jobaroo
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom.File
@@ -53,88 +56,46 @@ final case class PostJobPage(
   import PostJobPage.*
 
   override def view: Html[App.Msg] =
-    if !Session.isActive then
-      AppLayout.pageContainer(
-        AppLayout.hero(
-          title = "Post a role that looks as strong as the team behind it.",
-          subtitle = "Sign in first to create a listing and manage it from the recruiter workspace.",
-          eyebrow = "Recruiter Console"
-        ),
+    AppLayout.pageContainer(
+      renderHero,
+      if !Session.isActive then
         div(UiAttrs.classes(Jobaroo.state.centeredShort))(
           Feedback.alert("You need to be logged in to post a job.", Feedback.Tone.Warning)
         )
-      )
-    else
-      AppLayout.pageContainer(
-        AppLayout.hero(
-          title = "Publish a role that candidates can understand in seconds.",
-          subtitle = "Shape the headline, compensation, location, and description in one focused editor with a live candidate preview.",
-          eyebrow = "Recruiter Console",
-          actions = Seq(
-            Badge.render(s"Promoted listing $$${constants.jobAdvertPriceUSD}", Badge.Tone.Primary),
-            Badge.render("Live preview", Badge.Tone.Outline)
-          )
-        ),
+      else
         div(UiAttrs.classes(Jobaroo.shell.splitWide))(
           renderComposer,
           renderPreviewRail
         )
+    )
+
+  override protected def renderFormContent(): List[Html[App.Msg]] = Nil
+
+  private def renderHero: Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.post.heroSection))(
+      div(UiAttrs.classes(Jobaroo.post.heroWrap))(
+        div(UiAttrs.classes(Jobaroo.post.heroBackRow))(
+          AppLayout.backLink(fallback = urls.jobs, classes = Jobaroo.section.backLinkInverse)
+        ),
+        p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Recruiter Console")),
+        h1(UiAttrs.classes(Jobaroo.post.heroTitle))(text("Hire your next star.")),
+        p(UiAttrs.classes(Jobaroo.post.heroText))(
+          text("Shape the role exactly as candidates will see it, then publish from one focused posting workflow.")
+        ),
+        div(UiAttrs.classes(Jobaroo.post.heroStats))(
+          heroStat("12,000+", "Java/Scala applicants"),
+          heroStat("500+", "Companies hiring"),
+          heroStat("48 hrs", "Average time to first response")
+        )
       )
-
-  override protected def renderFormContent(): List[Html[App.Msg]] =
-    if !Session.isActive then return List(p()(text("You need to be logged in to post a job.")))
-
-    List(
-      renderInput("Company", "company", "text", true, company, UpdateCompany(_)),
-      renderInput("Title", "title", "text", true, title, UpdateTitle(_)),
-      renderTextArea("Description", "description", true, description, UpdateDescription(_)),
-      renderInput("External URL", "externalUrl", "url", true, externalUrl, UpdateExternalUrl(_)),
-      renderInput("Location", "location", "text", true, location, UpdateLocation(_)),
-      renderToggle(
-        name = "Remote",
-        uid = "remote",
-        isRequired = true,
-        checkedValue = remote,
-        onChange = _ => ToggleRemote,
-        hint = Some("Keep enabled when candidates can work from anywhere.")
-      ),
-      renderInput(
-        "Salary Low",
-        "salaryLow",
-        "number",
-        false,
-        salaryLow.fold("")(_.toString),
-        amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))
-      ),
-      renderInput(
-        "Salary High",
-        "salaryHigh",
-        "number",
-        false,
-        salaryHigh.fold("")(_.toString),
-        amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))
-      ),
-      renderInput("Currency", "currency", "text", false, currency.getOrElse(""), UpdateCurrency(_)),
-      renderInput("Country", "country", "text", false, country.getOrElse(""), UpdateCountry(_)),
-      renderInput("Tags", "tags", "text", false, tags.getOrElse(""), UpdateTags(_)),
-      renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
-      renderInput("Seniority", "seniority", "text", false, seniority.getOrElse(""), UpdateSeniority(_)),
-      renderInput("Other", "other", "text", false, other.getOrElse(""), UpdateOther(_)),
-      renderPrimaryAction(s"Post Job - $$${constants.jobAdvertPriceUSD}", PostJob)
     )
 
   private def renderComposer: Html[App.Msg] =
-    Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
-      Card.body(UiAttrs.classes(Jobaroo.surface.bodyComfortable))(
-        AppLayout.sectionTitle(
-          eyebrow = "Role details",
-          title = "Compose the listing",
-          subtitle = "Give candidates the essentials quickly: what the role is, what it pays, where it sits, and why it matters."
-        ),
-        renderStatusAlert,
+    Card.surface(UiAttrs.classes(Jobaroo.form.formCard))(
+      Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
         form(
           UiAttrs(name := "job-post", id := "form") |+|
-            UiAttrs.classes(Jobaroo.form.composeGrid) |+|
+            UiAttrs.classes(Jobaroo.post.editorForm) |+|
             UiAttrs(
               onEvent(
                 "submit",
@@ -143,7 +104,97 @@ final case class PostJobPage(
                   App.NoOp
               )
             )
-        )(renderFormContent()*)
+        )(
+          editorSection(
+            icon = Icons.building(Jobaroo.icon.regular),
+            title = "Basic information",
+            copy = "This is the first impression candidates get from the card grid and the job detail page."
+          )(
+            renderInput("Company", "company", "text", true, company, UpdateCompany(_)),
+            renderInput("Job Title", "title", "text", true, title, UpdateTitle(_)),
+            renderTextArea("Job Description", "description", true, description, UpdateDescription(_)),
+            renderInput("Application URL", "externalUrl", "url", true, externalUrl, UpdateExternalUrl(_))
+          ),
+          divider,
+          editorSection(
+            icon = Icons.mapPin(Jobaroo.icon.regular),
+            title = "Location",
+            copy = "Clarify whether the role is remote and where the team is anchored."
+          )(
+            renderToggle(
+              name = "Fully Remote Position",
+              uid = "remote",
+              isRequired = true,
+              checkedValue = remote,
+              onChange = _ => ToggleRemote,
+              hint = Some("Toggle on when candidates can apply from anywhere.")
+            ),
+            div(UiAttrs.classes(Jobaroo.post.editorColumns2))(
+              renderInput("City / Region", "location", "text", true, location, UpdateLocation(_)),
+              renderInput("Country", "country", "text", false, country.getOrElse(""), UpdateCountry(_))
+            )
+          ),
+          divider,
+          editorSection(
+            icon = Icons.banknotes(Jobaroo.icon.regular),
+            title = "Compensation",
+            copy = "Strong salary signals improve conversion and reduce low-intent applications."
+          )(
+            div(UiAttrs.classes(Jobaroo.post.editorColumns3))(
+              renderInput(
+                "Minimum Salary",
+                "salaryLow",
+                "number",
+                false,
+                salaryLow.fold("")(_.toString),
+                amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))
+              ),
+              renderInput(
+                "Maximum Salary",
+                "salaryHigh",
+                "number",
+                false,
+                salaryHigh.fold("")(_.toString),
+                amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))
+              ),
+              renderInput("Currency", "currency", "text", false, currency.getOrElse(""), UpdateCurrency(_))
+            )
+          ),
+          divider,
+          editorSection(
+            icon = Icons.tag(Jobaroo.icon.regular),
+            title = "Additional details",
+            copy = "Use short labels for skill tags and seniority, then add any final context recruiters care about."
+          )(
+            div(UiAttrs.classes(Jobaroo.post.editorColumns2))(
+              renderInput("Tags", "tags", "text", false, tags.getOrElse(""), UpdateTags(_)),
+              renderInput("Seniority", "seniority", "text", false, seniority.getOrElse(""), UpdateSeniority(_))
+            ),
+            renderTextArea("Additional Information", "other", false, other.getOrElse(""), UpdateOther(_))
+          ),
+          divider,
+          editorSection(
+            icon = Icons.photo(Jobaroo.icon.regular),
+            title = "Company logo",
+            copy = "Add a recognizable mark so the card and preview feel credible."
+          )(
+            renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_))
+          ),
+          divider,
+          div(UiAttrs.classes(Jobaroo.form.submitPanel))(
+            div(UiAttrs.classes(Jobaroo.form.submitRow))(
+              p(UiAttrs.classes(Jobaroo.form.fileTitle))(text("Job posting")),
+              p(UiAttrs.classes(Jobaroo.form.submitPrice))(text(s"$$${constants.jobAdvertPriceUSD}"))
+            ),
+            ul(UiAttrs.classes(Jobaroo.form.submitList))(
+              checklistLine("Featured placement for the default 7-day run."),
+              checklistLine("Posted to the live job board once payment completes."),
+              checklistLine("Editing stays within the existing application flow.")
+            ),
+            renderStatusAlert,
+            renderPrimaryAction(s"Post Job - $$${constants.jobAdvertPriceUSD}", PostJob)
+          )
+        )
       )
     )
 
@@ -155,8 +206,35 @@ final case class PostJobPage(
             p(UiAttrs.classes(Jobaroo.post.previewEyebrow))(text("Candidate preview")),
             h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("How the listing reads"))
           ),
-          renderPreviewCard,
+          renderPreviewCard
+        )
+      ),
+      Card.surface(UiAttrs.classes(Jobaroo.post.signalsCard))(
+        Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
+          p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Listing signals")),
+          h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("What candidates will notice first")),
+          ul(UiAttrs.classes(Jobaroo.post.signalsList))(
+            signalLine(Icons.mapPin(Jobaroo.icon.small), locationPreview),
+            signalLine(Icons.banknotes(Jobaroo.icon.small), salaryPreview),
+            signalLine(Icons.briefcase(Jobaroo.icon.small), fallback(seniority.getOrElse(""), "Open seniority")),
+            signalLine(if remote then Icons.globe(Jobaroo.icon.small) else Icons.building(Jobaroo.icon.small), if remote then "Remote friendly" else "On-site")
+          )
+        )
+      ),
+      Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
+        Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
           renderChecklist
+        )
+      ),
+      Card.surface(UiAttrs.classes(Jobaroo.post.tipsCard))(
+        Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
+          p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Tips for a great listing")),
+          h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("Increase response quality")),
+          ul(UiAttrs.classes(Jobaroo.post.tipsList))(
+            tipLine("Use an outcome-driven title instead of an internal level code."),
+            tipLine("Mention salary ranges when you can to improve candidate trust."),
+            tipLine("Highlight the team scope and impact in the first two description paragraphs.")
+          )
         )
       )
     )
@@ -195,18 +273,20 @@ final case class PostJobPage(
       div(UiAttrs.classes(Jobaroo.post.previewTags))(previewTags*),
       div(UiAttrs.classes(Jobaroo.post.applyBox))(
         p(UiAttrs.classes(Jobaroo.post.applyEyebrow))(text("Apply destination")),
-        p(UiAttrs.classes(Jobaroo.post.applyValue))(text(fallback(externalUrl, "External URL not set")))
+        p(UiAttrs.classes(Jobaroo.post.applyValue))(text(fallback(externalUrl, "External URL not set"))),
+        p(UiAttrs.classes(Jobaroo.jobs.footerLink))(text("View Job →"))
       )
     )
 
   private def renderChecklist: Html[App.Msg] =
     div(UiAttrs.classes(Jobaroo.post.checklist))(
+      p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Checklist")),
       p(UiAttrs.classes(Jobaroo.post.checklistTitle))(text("Listing checklist")),
       ul(UiAttrs.classes(Jobaroo.post.checklistList))(
         checklistItem("Company name is set", company.nonEmpty),
         checklistItem("Job title is set", title.nonEmpty),
         checklistItem("Description is set", description.nonEmpty),
-        checklistItem("External URL is set", externalUrl.nonEmpty)
+        checklistItem("External URL is valid", validExternalUrl)
       )
     )
 
@@ -216,26 +296,69 @@ final case class PostJobPage(
       Badge.render(if isReady then "Ready" else "Missing", if isReady then Badge.Tone.Primary else Badge.Tone.Outline)
     )
 
+  private def signalLine(icon: Html[App.Msg], label: String): Html[App.Msg] =
+    li(UiAttrs.classes(Jobaroo.post.signalsItem))(
+      icon,
+      p()(text(label))
+    )
+
+  private def editorSection(
+    icon: Html[App.Msg],
+    title: String,
+    copy: String
+  )(children: Html[App.Msg]*): Html[App.Msg] =
+    val header =
+      div(UiAttrs.classes(Jobaroo.post.editorHeader))(
+        div(UiAttrs.classes(Jobaroo.post.editorTitleRow))(
+          div(UiAttrs.classes(Jobaroo.post.editorIcon))(icon),
+          h2(UiAttrs.classes(Jobaroo.post.editorTitle))(text(title))
+        ),
+        p(UiAttrs.classes(Jobaroo.post.editorCopy))(text(copy))
+      )
+
+    div(UiAttrs.classes(Jobaroo.post.editorSection))((header +: children.toSeq)*)
+
+  private def heroStat(value: String, label: String): Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.post.heroStat))(
+      p(UiAttrs.classes(Jobaroo.post.heroValue))(text(value)),
+      p(UiAttrs.classes(Jobaroo.post.heroLabel))(text(label))
+    )
+
+  private def checklistLine(label: String): Html[App.Msg] =
+    li(UiAttrs.classes(Jobaroo.post.tipsItem))(
+      Icons.check(Jobaroo.icon.small),
+      span()(text(label))
+    )
+
+  private def tipLine(label: String): Html[App.Msg] =
+    li(UiAttrs.classes(Jobaroo.post.tipsItem))(
+      Icons.info(Jobaroo.icon.small),
+      span()(text(label))
+    )
+
+  private def divider: Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.form.sectionDivider))()
+
   private def companyOrPlaceholder: String = fallback(company, "Company")
   private def titleOrPlaceholder: String   = fallback(title, "Role title")
 
   private def descriptionPreview: String =
     fallback(
-      PreviewText.fromMarkdown(description),
+      PreviewText.fromMarkdown(PreviewText.withoutLeadingTitle(description, title)),
       "Add a concise, candidate-first description that explains the role, the impact, and why someone should care."
     )
 
   private def locationPreview: String =
     val place = fallback(location, "Location")
-    country.fold(place)(selectedCountry => s"$selectedCountry, $place")
+    country.fold(place)(selectedCountry => s"$place, $selectedCountry")
 
   private def salaryPreview: String =
     (salaryLow, salaryHigh, currency.map(_.trim).filter(_.nonEmpty)) match
-      case (Some(low), Some(high), Some(curr)) => s"$curr $low-$high"
-      case (Some(low), Some(high), None)       => s"$low-$high"
+      case (Some(low), Some(high), Some(curr)) => s"$curr $low - $curr $high"
+      case (Some(low), Some(high), None)       => s"$low - $high"
       case (Some(low), None, Some(curr))       => s"$curr $low+"
       case (Some(low), None, None)             => s"$low+"
-      case (None, Some(high), Some(curr))      => s"$curr up to $high"
+      case (None, Some(high), Some(curr))      => s"Up to $curr $high"
       case (None, Some(high), None)            => s"Up to $high"
       case _                                   => "Salary TBD"
 
@@ -249,6 +372,23 @@ final case class PostJobPage(
 
   private def fallback(value: String, default: String): String =
     Option(value).map(_.trim).filter(_.nonEmpty).getOrElse(default)
+
+  private def trimmed(value: String): String =
+    Option(value).map(_.trim).getOrElse("")
+
+  private def validExternalUrl: Boolean =
+    trimmed(externalUrl).matches("""https?://.+""")
+
+  private def validationError: Option[String] =
+    if trimmed(company).isEmpty then Some("Company is required.")
+    else if trimmed(title).isEmpty then Some("Job title is required.")
+    else if trimmed(description).isEmpty then Some("Job description is required.")
+    else if !validExternalUrl then Some("Application URL must start with http:// or https://.")
+    else if trimmed(location).isEmpty then Some("Location is required.")
+    else if salaryLow.exists(_ < 0) || salaryHigh.exists(_ < 0) then Some("Salary values must be zero or greater.")
+    else if salaryLow.zip(salaryHigh).exists((low, high) => low > high) then
+      Some("Maximum salary must be greater than or equal to minimum salary.")
+    else None
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateCompany(company)         => (this.copy(company = company), Cmd.None)
@@ -269,25 +409,27 @@ final case class PostJobPage(
     case PostJobFailure(error)          => (setErrorStatus(error), Cmd.None)
     case PostJobSuccess(jobId)          => (setSuccessStatus("Job created"), Logger.consoleLog[IO](s"jobId: $jobId"))
     case PostJob                        =>
-      (
-        this,
-        commands.postJob(
-          company = this.company,
-          title = this.title,
-          description = this.description,
-          externalUrl = this.externalUrl,
-          location = this.location,
-          remote = this.remote,
-          salaryLow = this.salaryLow,
-          salaryHigh = this.salaryHigh,
-          currency = this.currency,
-          country = this.country,
-          tags = this.tags,
-          image = this.image,
-          seniority = this.seniority,
-          other = this.other
-        )(promoted = true)
-      )
+      validationError.fold[(Page, Cmd[IO, App.Msg])](
+        (
+          this,
+          commands.postJob(
+            company = this.company,
+            title = this.title,
+            description = this.description,
+            externalUrl = this.externalUrl,
+            location = this.location,
+            remote = this.remote,
+            salaryLow = this.salaryLow,
+            salaryHigh = this.salaryHigh,
+            currency = this.currency,
+            country = this.country,
+            tags = this.tags,
+            image = this.image,
+            seniority = this.seniority,
+            other = this.other
+          )(promoted = true)
+        )
+      )(message => (setErrorStatus(message), Cmd.None))
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
   private def setSuccessStatus(message: String): Page = this.copy(status = Some(Page.Status(message, Page.Kind.SUCCESS)))

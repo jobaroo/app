@@ -4,6 +4,7 @@ import tyrian.*
 import cats.effect.IO
 import com.jobaroo.App
 import com.jobaroo.components.AppLayout
+import com.jobaroo.pages.Page.urls
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.daisy.Card
 import com.jobaroo.tyrianui.html.Tags.{div, h1, p}
@@ -23,7 +24,8 @@ final case class NotFoundPage() extends Page:
             h1(UiAttrs.classes(Jobaroo.notFound.title))(tyrian.Html.text("This page doesn't exist.")),
             p(UiAttrs.classes(Jobaroo.notFound.description))(
               tyrian.Html.text("The route could not be found. Use the main navigation to get back to the active hiring pages.")
-            )
+            ),
+            AppLayout.backLink(fallback = urls.home)
           )
         )
       )

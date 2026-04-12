@@ -24,7 +24,7 @@ object Badge:
     val allAttrs =
       attrs |+| UiAttrs.classes(
         Daisy.groups.badgeBase |+| Css.literal(
-          "gap-2 rounded-full px-3 py-2 text-[0.72rem] font-bold uppercase tracking-[0.16em]"
+          "badge-sm gap-1 rounded-md px-2 py-1 text-[0.65rem] font-medium normal-case"
         ) |+| tone.classes
       )
 
