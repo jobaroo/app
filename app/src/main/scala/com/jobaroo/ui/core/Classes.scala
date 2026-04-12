@@ -38,11 +38,12 @@ object Css:
     override def empty: Css = Css.empty
 
     override def combine(x: Css, y: Css): Css =
-      (x.render, y.render) match
-        case (empty, right) => right.asInstanceOf[Css]
-        case (left, empty)  => left.asInstanceOf[Css]
-        case (left, right)  =>
-          s"$left $right".asInstanceOf[Css]
+      val left  = x.render
+      val right = y.render
+
+      if left.isEmpty then y
+      else if right.isEmpty then x
+      else s"$left $right".asInstanceOf[Css]
 
   extension (css: Css)
 
