@@ -1,52 +1,69 @@
-# Jobaroo UI design
+# Jobaroo UI Design
 
 ## Purpose
-- Provide one compact source of truth for the app's visual language.
-- Optimize for reuse by humans and LLMs: short sections, explicit rules, minimal prose.
+- Keep one compact source of truth for the visual system.
+- Optimize for fast reuse by humans and LLMs: short rules, no narrative filler.
 
 ## Product direction
-- Build a hiring product that feels calm, sharp, and fast.
-- Keep the visual language aligned with the logo: black, warm yellow, white, and restrained neutrals.
-- Prefer clarity over ornament; use contrast, spacing, and hierarchy before adding effects.
+- Jobaroo should feel like a focused hiring desk, not a playful dashboard.
+- The product is warm, sharp, and editorial: black structure, warm yellow accents, ivory canvas, restrained neutrals.
+- The UI must feel customer-facing. Do not leak implementation or migration language into page copy.
 
-## Design principles
-- Make search and scanning effortless.
-- Keep surfaces flat-to-soft, not glossy or futuristic.
-- Use strong structure: clear header, obvious filters, dense but readable job cards.
-- Make forms feel trustworthy and low-friction.
-- Preserve functional behavior while improving presentation.
-
-## Theme
-- Brand colors: black, white, `#f5b800`-adjacent yellow.
-- Light theme is primary; dark theme should feel like the same product, not a different one.
-- Accent color is for primary actions, selection, and focus, not for decoration everywhere.
+## Brand frame
+- Light theme is primary.
+- Core palette: near-black, warm yellow, soft ivory, muted sand.
+- Dark theme should keep the same personality: black surfaces, warm contrast, gold actions.
+- Primary color is reserved for CTA buttons, active states, badges, and focus accents.
 
 ## Typography
-- Use one readable body family and one more expressive heading family at most.
-- Headings should feel confident and compact.
-- Body copy should stay plain, fast to scan, and never oversized.
+- Use a clean body face and a compact display face.
+- Headings should feel dense and confident.
+- Labels and microcopy should stay small, uppercase only when they help scanning.
 
-## Layout
-- Header should be stable, compact, and brand-led.
-- Job list should prioritize scan speed: filters on the side, results dominant, cards easy to compare.
-- Cards should expose title, company, location, salary, seniority, and tags without visual clutter.
-- Forms should separate composition from preview and keep submit intent visible.
+## Layout rules
+- Global shell: compact dark header, large dark hero, light content canvas, dark footer.
+- Jobs page: left filter rail, dominant results column, flat white card stack.
+- Detail page: strong title block, fast metadata scan, clear external apply action.
+- Auth/profile pages: dark marketing panel paired with a bright form workspace.
+- Post-job page: form workspace on the left, sticky candidate preview rail on the right.
 
-## Components
-- Shared visual rules belong in `ui/` presets and typed primitives.
-- App-shaped building blocks belong in `components/`.
-- Pages should compose existing building blocks instead of inventing new styling locally.
+## Surface language
+- Prefer flat-to-soft cards over glassy gradients.
+- Use large rounded corners, thin borders, and shallow shadows.
+- White content cards should sit on a warm ivory background.
+- Dark hero/header/footer surfaces carry the strongest contrast on the page.
+
+## Component rules
+- Job cards are dense and comparison-friendly:
+  - company
+  - title
+  - short summary
+  - location
+  - compensation
+  - remote/on-site signal
+  - tags
+  - apply action
+- Filter groups should stay compact and scannable.
+- Buttons should feel compact, bold, and obvious.
+- Form controls must have visible boundaries; do not let fields disappear into white cards.
+- Icons should be simple inline SVG marks, never placeholder text tokens.
 
 ## Interaction
-- Hover, focus, and selection states must be obvious and consistent.
-- Primary actions should always stand out from secondary actions.
-- Filters, toggles, and form states should communicate change immediately.
+- Keep motion subtle: small lift, border emphasis, shadow change.
+- Hover, focus, active, and disabled states must be visually distinct.
+- Theme toggle should preserve the same design language, not switch to a different product personality.
+
+## Copy
+- Use customer-facing language.
+- Avoid internal engineering terms in the UI.
+- Prefer direct, calm, product-oriented phrasing.
 
 ## Accessibility
-- Preserve contrast in both themes.
-- Keep focus states visible.
-- Avoid using color as the only status signal.
+- Keep contrast strong enough in both themes.
+- Preserve visible focus states.
+- Do not rely on color alone for status or readiness.
 
 ## Change management
-- Update this file whenever the design system, page composition rules, or visual priorities change.
-- Keep entries compact and directive; this file should remain easy to diff and cheap to load into an LLM context.
+- Update this file in the same change whenever the visual language, layout rules, copy rules, or component behavior changes.
+- Keep this document shorter than the implementation it governs.
+- If code and `DESIGN.md` disagree, bring them back into sync immediately.
