@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@source "./src/main/scala";
+@source "./index.html";
+@source "./build";
+@source "./app.js";
+
+@plugin "daisyui" {
+  themes: jobaroo-light --default, jobaroo-dark --prefersdark;
+  root: ":root";
+}
+
+@plugin "daisyui/theme" {
+  name: "jobaroo-light";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(98% 0.012 65);
+  --color-base-200: oklch(95% 0.016 62);
+  --color-base-300: oklch(91% 0.022 58);
+  --color-base-content: oklch(23% 0.026 255);
+  --color-primary: oklch(66% 0.212 39);
+  --color-primary-content: oklch(99% 0.01 40);
+  --color-secondary: oklch(54% 0.098 250);
+  --color-secondary-content: oklch(98% 0.01 255);
+  --color-accent: oklch(73% 0.1 210);
+  --color-accent-content: oklch(20% 0.02 245);
+  --color-neutral: oklch(27% 0.03 258);
+  --color-neutral-content: oklch(96% 0.01 65);
+  --color-info: oklch(72% 0.108 225);
+  --color-info-content: oklch(20% 0.02 240);
+  --color-success: oklch(72% 0.138 155);
+  --color-success-content: oklch(21% 0.02 165);
+  --color-warning: oklch(84% 0.16 84);
+  --color-warning-content: oklch(24% 0.03 84);
+  --color-error: oklch(64% 0.215 28);
+  --color-error-content: oklch(98% 0.01 25);
+
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --radius-box: 1.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "jobaroo-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(22% 0.026 262);
+  --color-base-200: oklch(26% 0.028 262);
+  --color-base-300: oklch(31% 0.03 262);
+  --color-base-content: oklch(96% 0.01 65);
+  --color-primary: oklch(69% 0.215 39);
+  --color-primary-content: oklch(18% 0.014 30);
+  --color-secondary: oklch(72% 0.094 235);
+  --color-secondary-content: oklch(17% 0.02 250);
+  --color-accent: oklch(79% 0.105 188);
+  --color-accent-content: oklch(18% 0.02 190);
+  --color-neutral: oklch(17% 0.01 255);
+  --color-neutral-content: oklch(95% 0.01 65);
+  --color-info: oklch(75% 0.102 230);
+  --color-info-content: oklch(17% 0.02 240);
+  --color-success: oklch(79% 0.14 156);
+  --color-success-content: oklch(17% 0.02 165);
+  --color-warning: oklch(86% 0.15 88);
+  --color-warning-content: oklch(20% 0.02 88);
+  --color-error: oklch(70% 0.21 28);
+  --color-error-content: oklch(17% 0.02 28);
+
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --radius-box: 1.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@custom-variant dark (&:where([data-theme=jobaroo-dark], [data-theme=jobaroo-dark] *));

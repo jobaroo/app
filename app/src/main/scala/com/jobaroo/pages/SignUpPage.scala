@@ -52,13 +52,13 @@ final case class SignUpPage(
     case SignUpSuccess(message)                 => (setSuccessStatus(message), Cmd.None)
 
   override def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    renderInput("Password", "password", "password", true, UpdatePassword(_)),
-    renderInput("Confirm Password", "confirm-password", "password", true, UpdateConfirmPassword(_)),
-    renderInput("First Name", "first-name", "text", false, UpdateFirstName(_)),
-    renderInput("Last Name", "last-name", "text", false, UpdateLastName(_)),
-    renderInput("Company", "company", "text", false, UpdateCompany(_)),
-    button(`type` := "button", onClick(SignUp))("Sign Up")
+    renderInput("Email", "email", "email", true, email, UpdateEmail(_)),
+    renderInput("Password", "password", "password", true, password, UpdatePassword(_)),
+    renderInput("Confirm Password", "confirm-password", "password", true, confirmPassword, UpdateConfirmPassword(_)),
+    renderInput("First Name", "first-name", "text", false, firstName, UpdateFirstName(_)),
+    renderInput("Last Name", "last-name", "text", false, lastName, UpdateLastName(_)),
+    renderInput("Company", "company", "text", false, company, UpdateCompany(_)),
+    renderPrimaryAction("Create Account", SignUp)
   )
 
   private def setErrorStatus(message: String): SignUpPage   = this.copy(status = Some(Status(message, Kind.ERROR)))

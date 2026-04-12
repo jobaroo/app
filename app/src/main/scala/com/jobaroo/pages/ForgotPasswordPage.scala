@@ -21,9 +21,9 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
   import ForgotPasswordPage.*
 
   override def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    button(`type` := "button", onClick(ResetPassword))("Send Email"),
-    Anchors.renderAuxLink(urls.resetPassword, "Have a token?", cssClass = "auth-link")
+    renderInput("Email", "email", "email", true, email, UpdateEmail(_)),
+    renderPrimaryAction("Send Recovery Email", ResetPassword),
+    Anchors.renderAuxLink(urls.resetPassword, "Have a token?")
   )
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match

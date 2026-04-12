@@ -1,32 +1,34 @@
 package com.jobaroo.components
 
-import io.circe.syntax.*
-import io.circe.parser.*
 import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import cats.effect.IO
+import cats.syntax.semigroup.*
 import tyrian.*
 import tyrian.http.*
 import tyrian.Html.*
-import cats.effect.IO
 import com.jobaroo.App
 import com.jobaroo.common.*
-import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
 import com.jobaroo.domain.job.*
-import com.jobaroo.pages.Page.urls
-import com.jobaroo.core.Session
-import com.jobaroo.pages.Page.Kind
-import com.jobaroo.common.constants.endpoints
-import org.scalajs.dom.HTMLInputElement
-import tyrian.cmds.Logger
+import com.jobaroo.tyrianui.core.UiAttrs
+import com.jobaroo.tyrianui.daisy.Button
+import com.jobaroo.tyrianui.daisy.Card
+import com.jobaroo.tyrianui.daisy.Field
+import com.jobaroo.tyrianui.daisy.Feedback
+import com.jobaroo.tyrianui.html.Tags.{div, h2, input, p}
+import com.jobaroo.ui.core.UiId
+import com.jobaroo.ui.preset.Jobaroo
 
 final case class FilterPanel(
-  jobFilters     : JobFilter = JobFilter(),
+  jobFilters: JobFilter = JobFilter(),
   selectedFilters: Map[String, Set[String]] = Map.empty,
-  optError       : Option[String] = None,
-  maxSalary      : Int = 0,
-  remote         : Boolean = false,
-  isDirty        : Boolean = false,
-  filterAction   : Map[String, Set[String]] => App.Msg = _ => App.NoOp
+  optError: Option[String] = None,
+  maxSalary: Int = 0,
+  remote: Boolean = false,
+  isDirty: Boolean = false,
+  filterAction: Map[String, Set[String]] => App.Msg = _ => App.NoOp
 ) extends Component[App.Msg, FilterPanel]:
 
   import FilterPanel.*
@@ -43,50 +45,30 @@ final case class FilterPanel(
       val prevValues         = selectedFilters.getOrElse(groupName, Set.empty)
       val newValues          = if isChecked then prevValues + value else prevValues - value
       val newSelectedFilters = selectedFilters + (groupName -> newValues)
-      (
-        this.copy(selectedFilters = newSelectedFilters, isDirty = true),
-        Logger.consoleLog[IO](s"New filters: $newSelectedFilters"))
+      (this.copy(selectedFilters = newSelectedFilters, isDirty = true), Cmd.None)
 
   override def view: Html[App.Msg] =
-    div(`class` := "accordion accordion-flush", id := "accordionFlushExample")(
-      div(`class` := "accordion-item")(
-        h2(`class` := "accordion-header", id := "flush-headingOne")(
-          button(
-            `class` := "accordion-button",
-            id      := "accordion-search-filter",
-            `type`  := "button",
-            attribute("data-bs-toggle", "collapse"),
-            attribute("data-bs-target", "#flush-collapseOne"),
-            attribute("aria-expanded", "true"),
-            attribute("aria-controls", "flush-collapseOne")
-          )(
-            div(`class` := "jvm-recent-jobs-accordion-body-heading")(
-              h3(span("Search"), text(" Filters"))
-            )
-          )
+    Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.stickyRail))(
+      Card.body(UiAttrs.classes(Jobaroo.surface.bodyPanel))(
+        div(UiAttrs.classes(Jobaroo.filter.header))(
+          p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Filter jobs")),
+          h2(UiAttrs.classes(Jobaroo.post.previewTitle))(text("Narrow the market")),
+          p(UiAttrs.classes(Jobaroo.filter.intro))(text("Typed controls, same page-level filtering behavior."))
         ),
-        div(
-          `class` := "accordion-collapse collapse show",
-          id      := "flush-collapseOne",
-          attribute("aria-labelledby", "flush-headingOne"),
-          attribute("data-bs-parent", "#accordionFlushExample")
-        )(
-          div(`class` := "accordion-body p-0")(
-            div(`class` := "page-status-error")(optError.fold(div())(div(_))),
-            salaryFilter,
-            renderRemoteCheckbox,
-            checkboxGroup("Companies", jobFilters.companies),
-            checkboxGroup("Locations", jobFilters.locations),
-            checkboxGroup("Countries", jobFilters.countries),
-            checkboxGroup("Tags", jobFilters.tags),
-            checkboxGroup("Seniorities", jobFilters.seniorities),
-            div(`class` := "jvm-accordion-search-btn")(
-              button(
-                `class` := "btn btn-primary",
-                `type`  := "button",
-                disabled(!isDirty),
-                onClick(TriggerFilter)
-              )("Apply Filters")
+        optError.fold(div())(error => Feedback.alert(error, Feedback.Tone.Error)),
+        salaryFilter,
+        remoteFilter,
+        checkboxGroup("Companies", jobFilters.companies),
+        checkboxGroup("Locations", jobFilters.locations),
+        checkboxGroup("Countries", jobFilters.countries),
+        checkboxGroup("Tags", jobFilters.tags),
+        checkboxGroup("Seniorities", jobFilters.seniorities),
+        div(UiAttrs.classes(Jobaroo.filter.actionGrid))(
+          Button.render(
+            Button.props[App.Msg]("Apply Filters").copy(
+              width = Button.Width.Full,
+              disabled = !isDirty,
+              onPress = Some(TriggerFilter)
             )
           )
         )
@@ -95,72 +77,60 @@ final case class FilterPanel(
 
   private def salaryFilter: Html[App.Msg] =
     renderFilterGroup(
-      groupName = "Salary",
-      contents = div(`class` := "mb-3")(
-        label(`for` := "filter-salary")("Min (in local currency)"),
-        input(`type` := "number", id := "filter-salary", onInput(s => UpdateSalary(if s.isEmpty then 0 else s.toInt)))
+      title = "Salary",
+      content = Field.textInput(
+        meta = Field.Meta.static("filter-salary", "Minimum salary", hint = Some("Use the candidate-facing local currency.")),
+        currentValue = if maxSalary == 0 then "" else maxSalary.toString,
+        onValue = value => UpdateSalary(value.toIntOption.getOrElse(0)),
+        kind = Field.InputKind.Number,
+        fieldAttrs = UiAttrs.classes(Jobaroo.form.compactFieldset),
+        labelAttrs = UiAttrs.classes(Jobaroo.form.fieldLabel),
+        hintAttrs = UiAttrs.classes(Jobaroo.form.fieldHint)
       )
     )
 
-  private def renderRemoteCheckbox: Html[App.Msg] =
+  private def remoteFilter: Html[App.Msg] =
     renderFilterGroup(
-      groupName = "Remote",
-      contents =
-        div(`class` := "form-check")(
-          label(`class` := "form-check-label", `for` := "filter-checkbox")("Remote"),
-          input(
-            `class` := "form-check-input",
-            `type`  := "checkbox",
-            id      := s"filter-checkbox",
-            checked(remote),
-            onEvent("change", e => UpdateRemoteCheckbox(e.target.asInstanceOf[HTMLInputElement].checked))
-          )
-        )
+      title = "Remote",
+      content = Field.toggleField(
+        meta = Field.Meta.static("filter-remote", "Remote only", hint = Some("Only show fully remote roles.")),
+        checkedValue = remote,
+        onChangeValue = UpdateRemoteCheckbox(_),
+        wrapperAttrs = UiAttrs.classes(Jobaroo.form.fileLabel),
+        copyAttrs = UiAttrs.classes(Jobaroo.form.fileCopy),
+        titleAttrs = UiAttrs.classes(Jobaroo.form.fileTitle),
+        hintAttrs = UiAttrs.classes(Jobaroo.form.fileDescription)
+      )
     )
 
   private def checkboxGroup(groupName: String, values: List[String]): Html[App.Msg] =
-    def checkBox(value: String, isChecked: Boolean): Html[App.Msg] =
-      div(`class` := "form-check")(
-        label(`class` := "form-check-label", `for` := s"filter-$groupName-$value")(value),
-        input(
-          `class` := "form-check-input",
-          `type`  := "checkbox",
-          id      := s"filter-$groupName-$value",
-          checked(isChecked),
-          onEvent("change", e => UpdateCheckbox(groupName, value, e.target.asInstanceOf[HTMLInputElement].checked))
-        )
-      )
-
     val checkedValues = selectedFilters.getOrElse(groupName, Set.empty)
+
     renderFilterGroup(
-      groupName = groupName,
-      contents = div(`class` := "mb-3")(values.map(v => checkBox(v, checkedValues(v))))
+      title = groupName,
+      content = div(UiAttrs.classes(Jobaroo.filter.groupContent))(
+        values.map { value =>
+          Field.checkboxField(
+            meta = Field.Meta.dynamic(
+              id = UiId.slug("filter", groupName, value),
+              label = value
+            ),
+            checkedValue = checkedValues(value),
+            onChangeValue = checked => UpdateCheckbox(groupName, value, checked),
+            wrapperAttrs = UiAttrs.classes(Jobaroo.form.fileLabel),
+            copyAttrs = UiAttrs.classes(Jobaroo.form.fileCopy),
+            titleAttrs = UiAttrs.classes(Jobaroo.form.fileTitle),
+            hintAttrs = UiAttrs.classes(Jobaroo.form.fileDescription)
+          )
+        }*
+      )
     )
 
-  private def renderFilterGroup(groupName: String, contents: Html[App.Msg]) =
-    div(`class` := "accordion-item")(
-      h2(`class` := "accordion-header", id := s"heading$groupName")(
-        button(
-          `class` := "accordion-button collapsed",
-          `type`  := "button",
-          attribute("data-bs-toggle", "collapse"),
-          attribute("data-bs-target", s"#collapse$groupName"),
-          attribute("aria-expanded", "false"),
-          attribute("aria-controls", s"collapse$groupName")
-        )(
-          groupName
-        )
-      ),
-      div(
-        `class` := "accordion-collapse collapse",
-        id      := s"collapse$groupName",
-        attribute("aria-labelledby", "headingOne"),
-        attribute("data-bs-parent", "#accordionExample")
-      )(
-        div(`class` := "accordion-body")(
-          contents // <--- inject things here
-        )
-      )
+  private def renderFilterGroup(title: String, content: Html[App.Msg]): Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.filter.collapse))(
+      input(UiAttrs(`type` := "checkbox", checked(true))),
+      div(UiAttrs.classes(Jobaroo.filter.collapseTitle))(text(title)),
+      div(UiAttrs.classes(Jobaroo.filter.collapseBody))(content)
     )
 
 object FilterPanel:

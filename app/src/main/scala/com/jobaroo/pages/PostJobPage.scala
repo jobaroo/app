@@ -1,28 +1,36 @@
 package com.jobaroo.pages
 
-import io.circe.syntax.*
-import io.circe.parser.*
 import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import cats.effect.IO
+import cats.syntax.semigroup.*
 import tyrian.*
 import tyrian.http.*
 import tyrian.Html.*
-import cats.effect.IO
 import com.jobaroo.App
 import com.jobaroo.common.*
-import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
-import com.jobaroo.domain.job.*
-import com.jobaroo.pages.Page.urls
-import com.jobaroo.App.Msg
-import com.jobaroo.core.Session
-import tyrian.cmds.Logger
-import org.scalajs.dom.File
-import org.scalajs.dom.document
-import org.scalajs.dom.FileReader
-import scala.util.Try
+import com.jobaroo.common.constants
+import com.jobaroo.components.AppLayout
+import com.jobaroo.components.PreviewText
 import com.jobaroo.core.Router
-import org.scalajs.dom.{HTMLCanvasElement, HTMLImageElement}
+import com.jobaroo.core.Session
+import com.jobaroo.domain.job.*
+import com.jobaroo.tyrianui.core.UiAttrs
+import com.jobaroo.tyrianui.daisy.Badge
+import com.jobaroo.tyrianui.daisy.Card
+import com.jobaroo.tyrianui.daisy.Feedback
+import com.jobaroo.tyrianui.html.Tags.{div, form, h3, h4, img, li, p, ul}
+import com.jobaroo.ui.preset.Jobaroo
 import org.scalajs.dom.CanvasRenderingContext2D
+import org.scalajs.dom.File
+import org.scalajs.dom.FileReader
+import org.scalajs.dom.HTMLCanvasElement
+import org.scalajs.dom.HTMLImageElement
+import org.scalajs.dom.document
+import scala.util.Try
+import tyrian.cmds.Logger
 
 final case class PostJobPage(
   company    : String = "",
@@ -44,28 +52,202 @@ final case class PostJobPage(
 
   import PostJobPage.*
 
+  override def view: Html[App.Msg] =
+    if !Session.isActive then
+      AppLayout.pageContainer(
+        AppLayout.hero(
+          title = "Post a job with a cleaner hiring workflow.",
+          subtitle = "You need to be logged in before creating a listing.",
+          eyebrow = "Recruiter Console"
+        ),
+        div(UiAttrs.classes(Jobaroo.state.centeredShort))(
+          Feedback.alert("You need to be logged in to post a job.", Feedback.Tone.Warning)
+        )
+      )
+    else
+      AppLayout.pageContainer(
+        AppLayout.hero(
+          title = "Publish a role that candidates actually want to read.",
+          subtitle = "The submit flow stays wired to the current backend. This page is being rebuilt as a disciplined UI layer with a live preview and cleaner composition.",
+          eyebrow = "Recruiter Console",
+          actions = Seq(
+            Badge.render(s"Promoted listing $$${constants.jobAdvertPriceUSD}", Badge.Tone.Primary)
+          )
+        ),
+        div(UiAttrs.classes(Jobaroo.shell.splitWide))(
+          renderComposer,
+          renderPreviewRail
+        )
+      )
+
   override protected def renderFormContent(): List[Html[App.Msg]] =
-    if !Session.isActive then return List(p(`class` := "form-text")("You need to be logged in to post a job."))
+    if !Session.isActive then return List(p()(text("You need to be logged in to post a job.")))
 
     List(
-      renderInput("Company", "company", "text", true, UpdateCompany(_)),
-      renderInput("Title", "title", "text", true, UpdateTitle(_)),
-      renderTextArea("Description", "description", true, UpdateDescription(_)),
-      renderInput("ExternalUrl", "externalUrl", "text", true, UpdateExternalUrl(_)),
-      renderInput("Location", "location", "text", true, UpdateLocation(_)),
-      renderToggle("Remote", "remote", true, _ => ToggleRemote),
-      renderInput("SalaryLow", "salaryLow", "number", false, amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))),
-      renderInput("SalaryHigh", "salaryHigh", "number", false, amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))),
-      renderInput("Currency", "currency", "text", false, UpdateCurrency(_)),
-      renderInput("Country", "country", "text", false, UpdateCountry(_)),
-      renderInput("Tags", "tags", "text", false, UpdateTags(_)),
+      renderInput("Company", "company", "text", true, company, UpdateCompany(_)),
+      renderInput("Title", "title", "text", true, title, UpdateTitle(_)),
+      renderTextArea("Description", "description", true, description, UpdateDescription(_)),
+      renderInput("External URL", "externalUrl", "url", true, externalUrl, UpdateExternalUrl(_)),
+      renderInput("Location", "location", "text", true, location, UpdateLocation(_)),
+      renderToggle(
+        name = "Remote",
+        uid = "remote",
+        isRequired = true,
+        checkedValue = remote,
+        onChange = _ => ToggleRemote,
+        hint = Some("Keep enabled when candidates can work from anywhere.")
+      ),
+      renderInput(
+        "Salary Low",
+        "salaryLow",
+        "number",
+        false,
+        salaryLow.fold("")(_.toString),
+        amount => UpdateSalaryLow(Try(amount.toInt).getOrElse(0))
+      ),
+      renderInput(
+        "Salary High",
+        "salaryHigh",
+        "number",
+        false,
+        salaryHigh.fold("")(_.toString),
+        amount => UpdateSalaryHigh(Try(amount.toInt).getOrElse(0))
+      ),
+      renderInput("Currency", "currency", "text", false, currency.getOrElse(""), UpdateCurrency(_)),
+      renderInput("Country", "country", "text", false, country.getOrElse(""), UpdateCountry(_)),
+      renderInput("Tags", "tags", "text", false, tags.getOrElse(""), UpdateTags(_)),
       renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
-      renderInput("Seniority", "seniority", "text", false, UpdateSeniority(_)),
-      renderInput("Other", "other", "text", false, UpdateOther(_)),
-      button(`class` := "form-submit-btn", `type` := "button", onClick(PostJob))(
-        "Post Job - $" + constants.jobAdvertPriceUSD
+      renderInput("Seniority", "seniority", "text", false, seniority.getOrElse(""), UpdateSeniority(_)),
+      renderInput("Other", "other", "text", false, other.getOrElse(""), UpdateOther(_)),
+      renderPrimaryAction(s"Post Job - $$${constants.jobAdvertPriceUSD}", PostJob)
+    )
+
+  private def renderComposer: Html[App.Msg] =
+    Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
+      Card.body(UiAttrs.classes(Jobaroo.surface.bodyComfortable))(
+        AppLayout.sectionTitle(
+          eyebrow = "Role details",
+          title = "Compose the listing",
+          subtitle = "Keep the structure tight: title, compensation, location, signal, and a strong description."
+        ),
+        renderStatusAlert,
+        form(
+          UiAttrs(name := "job-post", id := "form") |+|
+            UiAttrs.classes(Jobaroo.form.composeGrid) |+|
+            UiAttrs(
+              onEvent(
+                "submit",
+                e =>
+                  e.preventDefault()
+                  App.NoOp
+              )
+            )
+        )(renderFormContent()*)
       )
     )
+
+  private def renderPreviewRail: Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.post.rail))(
+      Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.stickyRail))(
+        Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
+          div(UiAttrs.classes(Jobaroo.post.previewHeader))(
+            p(UiAttrs.classes(Jobaroo.post.previewEyebrow))(text("Live preview")),
+            h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("How candidates will see it"))
+          ),
+          renderPreviewCard,
+          renderChecklist
+        )
+      )
+    )
+
+  private def renderStatusAlert: Html[App.Msg] =
+    status.fold(div()) { currentStatus =>
+      val tone = currentStatus.kind match
+        case Page.Kind.SUCCESS => Feedback.Tone.Success
+        case Page.Kind.ERROR   => Feedback.Tone.Error
+        case Page.Kind.LOADING => Feedback.Tone.Info
+
+      Feedback.alert(currentStatus.message, tone)
+    }
+
+  private def renderPreviewCard: Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.post.previewCard))(
+      div(UiAttrs.classes(Jobaroo.post.previewTop))(
+        div(UiAttrs.classes(Jobaroo.jobs.avatarWrap))(
+          div(UiAttrs.classes(Jobaroo.jobs.avatarFrame))(
+            img(UiAttrs(src := image.getOrElse(constants.fallbackImage), alt := titleOrPlaceholder) |+| UiAttrs.classes(
+              Jobaroo.jobs.avatarImage
+            ))
+          )
+        ),
+        div(UiAttrs.classes(Jobaroo.post.previewCopy))(
+          p(UiAttrs.classes(Jobaroo.jobs.company))(text(companyOrPlaceholder)),
+          h4(UiAttrs.classes(Jobaroo.jobs.title))(text(titleOrPlaceholder)),
+          div(UiAttrs.classes(Jobaroo.jobs.metaRow))(
+            Badge.render(locationPreview, Badge.Tone.Outline),
+            Badge.render(salaryPreview, Badge.Tone.Outline),
+            Badge.render(if remote then "Remote" else "On-site", Badge.Tone.Primary)
+          )
+        )
+      ),
+      p(UiAttrs.classes(Jobaroo.post.previewDescription))(text(descriptionPreview)),
+      div(UiAttrs.classes(Jobaroo.post.previewTags))(previewTags*),
+      div(UiAttrs.classes(Jobaroo.post.applyBox))(
+        p(UiAttrs.classes(Jobaroo.post.applyEyebrow))(text("Apply destination")),
+        p(UiAttrs.classes(Jobaroo.post.applyValue))(text(fallback(externalUrl, "External URL not set")))
+      )
+    )
+
+  private def renderChecklist: Html[App.Msg] =
+    div(UiAttrs.classes(Jobaroo.post.checklist))(
+      p(UiAttrs.classes(Jobaroo.post.checklistTitle))(text("Readiness")),
+      ul(UiAttrs.classes(Jobaroo.post.checklistList))(
+        checklistItem("Company name is set", company.nonEmpty),
+        checklistItem("Job title is set", title.nonEmpty),
+        checklistItem("Description is set", description.nonEmpty),
+        checklistItem("External URL is set", externalUrl.nonEmpty)
+      )
+    )
+
+  private def checklistItem(label: String, isReady: Boolean): Html[App.Msg] =
+    li(UiAttrs.classes(Jobaroo.post.checklistItem))(
+      span()(text(label)),
+      Badge.render(if isReady then "Ready" else "Missing", if isReady then Badge.Tone.Primary else Badge.Tone.Outline)
+    )
+
+  private def companyOrPlaceholder: String = fallback(company, "Company")
+  private def titleOrPlaceholder: String   = fallback(title, "Role title")
+
+  private def descriptionPreview: String =
+    fallback(
+      PreviewText.fromMarkdown(description),
+      "Add a concise, candidate-first description. This live preview updates from the current Tyrian state."
+    )
+
+  private def locationPreview: String =
+    val place = fallback(location, "Location")
+    country.fold(place)(selectedCountry => s"$selectedCountry, $place")
+
+  private def salaryPreview: String =
+    (salaryLow, salaryHigh, currency.map(_.trim).filter(_.nonEmpty)) match
+      case (Some(low), Some(high), Some(curr)) => s"$curr $low-$high"
+      case (Some(low), Some(high), None)       => s"$low-$high"
+      case (Some(low), None, Some(curr))       => s"$curr $low+"
+      case (Some(low), None, None)             => s"$low+"
+      case (None, Some(high), Some(curr))      => s"$curr up to $high"
+      case (None, Some(high), None)            => s"Up to $high"
+      case _                                   => "Salary TBD"
+
+  private def previewTags: List[Html[App.Msg]] =
+    tags
+      .toList
+      .flatMap(_.split(",").map(_.trim).toList)
+      .filter(_.nonEmpty)
+      .take(5)
+      .map(tag => Badge.render(tag, Badge.Tone.Outline))
+
+  private def fallback(value: String, default: String): String =
+    Option(value).map(_.trim).filter(_.nonEmpty).getOrElse(default)
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case UpdateCompany(company)         => (this.copy(company = company), Cmd.None)
@@ -103,7 +285,8 @@ final case class PostJobPage(
           image = this.image,
           seniority = this.seniority,
           other = this.other
-        )(promoted = true))
+        )(promoted = true)
+      )
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
   private def setSuccessStatus(message: String): Page = this.copy(status = Some(Page.Status(message, Page.Kind.SUCCESS)))
@@ -164,8 +347,8 @@ object PostJobPage:
                 val canvas          = document.createElement("canvas").asInstanceOf[HTMLCanvasElement]
                 val ctx             = canvas.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
                 val (width, height) = computeImageDimensions(img.width, img.height)
-                canvas.width = 256
-                canvas.height = 256
+                canvas.width = width
+                canvas.height = height
 
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
@@ -182,8 +365,8 @@ object PostJobPage:
     private def computeImageDimensions(width: Int, height: Int): (Int, Int) =
       if width >= height then
         val ratio     = width * 1.0 / 256
-        val newWidth  = width / ratio;
-        val newHeight = width / ratio;
+        val newWidth  = width / ratio
+        val newHeight = height / ratio
         (newWidth.toInt, newHeight.toInt)
       else computeImageDimensions(width = height, height = width).swap
 

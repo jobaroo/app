@@ -35,10 +35,10 @@ final case class LoginPage(email: String = "", password: String = "", status: Op
         (this, commands.login(loginInfo))
 
   override def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    renderInput("Password", "password", "password", true, UpdatePassword(_)),
-    button(`type` := "button", onClick(Login))("Log In"),
-    Anchors.renderAuxLink(urls.forgotPassword, "Forgot Password?", cssClass = "auth-link")
+    renderInput("Email", "email", "email", true, email, UpdateEmail(_)),
+    renderInput("Password", "password", "password", true, password, UpdatePassword(_)),
+    renderPrimaryAction("Log In", Login),
+    Anchors.renderAuxLink(urls.forgotPassword, "Forgot Password?")
   )
 
   private def setErrorStatus(message: String): LoginPage   = this.copy(status = Some(Page.Status(message, Kind.ERROR)))

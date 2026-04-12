@@ -14,10 +14,10 @@ import com.jobaroo.common.Endpoint
 import com.jobaroo.domain.auth.*
 import com.jobaroo.pages.Page.urls
 
-import tyrian.Cmd
-
-import cats.effect.IO
 import com.jobaroo.core.Session
+import com.jobaroo.tyrianui.core.UiAttrs
+import com.jobaroo.tyrianui.html.Tags.{div, span}
+import com.jobaroo.ui.preset.Jobaroo
 
 final case class ProfilePage(oldPassword: String = "", newPassword: String = "", status: Option[Page.Status] = None)
   extends FormPage("Profile", status):
@@ -35,13 +35,19 @@ final case class ProfilePage(oldPassword: String = "", newPassword: String = "",
     case ChangePasswordSuccess          => (setSuccessStatus("Password was successfully changed!"), Cmd.None)
 
   override protected def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Old Password", "oldPassword", "password", true, UpdateOldPassword(_)),
-    renderInput("New Password", "newPassword", "password", true, UpdateNewPassword(_)),
-    button(`type` := "button", onClick(ChangePassword))("Change Password")
+    renderInput("Old Password", "oldPassword", "password", true, oldPassword, UpdateOldPassword(_)),
+    renderInput("New Password", "newPassword", "password", true, newPassword, UpdateNewPassword(_)),
+    renderPrimaryAction("Change Password", ChangePassword)
   )
 
   override def view: Html[App.Msg] =
-    if Session.isActive then super.view else div(h1("Profile"), div("It seems you're not logged in."))
+    if Session.isActive then super.view
+    else
+      div(UiAttrs.classes(Jobaroo.state.centeredWide))(
+        div(UiAttrs.classes(Jobaroo.alert.warningCard))(
+          span()(text("It seems you're not logged in."))
+        )
+      )
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
   private def setSuccessStatus(message: String): Page = this.copy(status = Some(Page.Status(message, Page.Kind.SUCCESS)))

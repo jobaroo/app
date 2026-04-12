@@ -1,27 +1,27 @@
 package com.jobaroo.pages
 
-import io.circe.syntax.*
-import io.circe.parser.*
 import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import cats.effect.IO
+import cats.syntax.semigroup.*
 import tyrian.*
 import tyrian.http.*
 import tyrian.Html.*
-import cats.effect.IO
 import com.jobaroo.App
 import com.jobaroo.common.*
-import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
-import com.jobaroo.domain.job.*
-import com.jobaroo.pages.Page.urls
-import com.jobaroo.App.Msg
-import com.jobaroo.core.Session
-import tyrian.cmds.Logger
-import com.jobaroo.pages.Page.Kind
+import com.jobaroo.components.AppLayout
 import com.jobaroo.components.FilterPanel
-import com.jobaroo.pages.JobListPage.FilterJobs
-import com.jobaroo.components.Anchors
-import com.jobaroo.core.Router
 import com.jobaroo.components.JobComponents
+import com.jobaroo.domain.job.*
+import com.jobaroo.pages.JobListPage.FilterJobs
+import com.jobaroo.pages.Page.Kind
+import com.jobaroo.tyrianui.core.UiAttrs
+import com.jobaroo.tyrianui.daisy.Button
+import com.jobaroo.tyrianui.daisy.Feedback
+import com.jobaroo.tyrianui.html.Tags.{div, span}
+import com.jobaroo.ui.preset.Jobaroo
 
 final case class JobListPage(
   jobs       : List[Job] = Nil,
@@ -37,7 +37,7 @@ final case class JobListPage(
 
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match
     case AddJobs(jobs, canLoadMore)      =>
-      (setSuccessStatus("Loaded").copy(jobs = this.jobs ++ jobs, canLoadMore = canLoadMore), Cmd.None)
+      (setSuccessStatus(s"Loaded ${jobs.length}").copy(jobs = this.jobs ++ jobs, canLoadMore = canLoadMore), Cmd.None)
     case JobFailure(error)               => (setErrorStatus(error), Cmd.None)
     case LoadMoreJobs                    => (this, commands.getJobs(jobFilter = this.jobFilters, offset = jobs.length))
     case FilterJobs(filters)             =>
@@ -48,37 +48,51 @@ final case class JobListPage(
       (this.copy(filterPanel = newFilterPanel), cmd)
 
   override def view: Html[App.Msg] =
-    section(`class` := "section-1")(
-      div(`class` := "container job-list-hero")(
-      h1(`class` := "job-list-title")("Jobaroo Jobs Board")
+    AppLayout.pageContainer(
+      AppLayout.hero(
+        title = "Find the best JVM jobs without fighting the interface.",
+        subtitle = "A cleaner board for Scala, Java, and adjacent backend teams. Filtering stays local to the page model; the visual system is now separate and composable.",
+        eyebrow = "Jobaroo Market",
+        actions = Seq(
+          span(UiAttrs.classes(Jobaroo.hero.counterBadge))(text(s"${jobs.length} loaded"))
+        )
       ),
-      div(`class` := "container")(
-        div(`class` := "row jvm-recent-jobs-body")(
-          div(`class` := "col-lg-4")(
-            filterPanel.view
+      AppLayout.split(
+        sidebar = filterPanel.view,
+        content = div(UiAttrs.classes(Jobaroo.shell.stack))(
+          div(UiAttrs.classes(Jobaroo.jobs.toolbar))(
+            AppLayout.sectionTitle(
+              eyebrow = "Live board",
+              title = "Open roles for serious backend teams",
+              subtitle = "The data and endpoints are unchanged. Only the UI surface is being rebuilt."
+            ),
+            div(UiAttrs.classes(Jobaroo.jobs.statPill))(text(s"${jobs.length} visible roles"))
           ),
-          div(`class` := "col-lg-8")(
-            jobs.map(JobComponents.renderJob) ++ optRenderLoadMore
+          div(UiAttrs.classes(Jobaroo.shell.gridGap5))(
+            (jobs.map(JobComponents.renderJob) :+ renderLoadMore)*
           )
         )
       )
     )
 
-  private def optRenderLoadMore: Option[Html[App.Msg]] = status.map { s =>
-    div(`class` := "load-more-action")(
-      s.kind match
-        case Kind.SUCCESS =>
-          if canLoadMore then
-            button(
-              `type`  := "button",
-              `class` := "load-more-btn",
-              onClick(LoadMoreJobs)
-            )("Load more jobs")
-          else div("All jobs loaded.")
-        case Kind.ERROR   => div(`class` := "page-status-error")(s.message)
-        case Kind.LOADING => div(`class` := "page-status-loading")("Loading...")
-    )
-  }
+  private def renderLoadMore: Html[App.Msg] = status match
+    case Some(s) =>
+      div(UiAttrs.classes(Jobaroo.state.centeredTight))(
+        s.kind match
+          case Kind.SUCCESS =>
+            if canLoadMore then
+              Button.render(
+                Button.props[App.Msg]("Load More Jobs").copy(
+                  tone = Button.Tone.Primary,
+                  onPress = Some(LoadMoreJobs)
+                )
+              )
+            else
+              Feedback.alert("All matching jobs are loaded.", Feedback.Tone.Success)
+          case Kind.ERROR   => Feedback.alert(s.message, Feedback.Tone.Error)
+          case Kind.LOADING => Feedback.alert("Loading jobs...", Feedback.Tone.Info)
+      )
+    case None    => div()
 
   // TODO - too lose
   def parseJobFilters(filters: Map[String, Set[String]]): JobFilter =

@@ -38,11 +38,11 @@ final case class ResetPasswordPage(
     case ResetPasswordSuccess        => (setSuccessStatus("Success! You can log in now!"), Cmd.None)
 
   override protected def renderFormContent(): List[Html[App.Msg]] = List(
-    renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    renderInput("Token", "token", "text", true, UpdateToken(_)),
-    renderInput("Password", "password", "password", true, UpdatePassword(_)),
-    button(`type` := "button", onClick(ResetPassword))("Set Password"),
-    Anchors.renderAuxLink(urls.forgotPassword, "Don't have a token yet?", cssClass = "auth-link")
+    renderInput("Email", "email", "email", true, email, UpdateEmail(_)),
+    renderInput("Token", "token", "text", true, token, UpdateToken(_)),
+    renderInput("Password", "password", "password", true, password, UpdatePassword(_)),
+    renderPrimaryAction("Set Password", ResetPassword),
+    Anchors.renderAuxLink(urls.forgotPassword, "Don't have a token yet?")
   )
 
   private def setErrorStatus(message: String): Page   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
