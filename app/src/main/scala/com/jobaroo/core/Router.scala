@@ -43,4 +43,9 @@ object Router:
   final case class ExternalRedirect(location: String)                                  extends Msg
 
   def startAt(initialLocation: String): (Router, Cmd[IO, Msg]) =
-    (Router(initialLocation, History[IO, String], Nil), Cmd.None)
+    val history = History[IO, String]
+    val seedInitialState = Cmd.SideEffect[IO] {
+      window.history.replaceState(initialLocation, "", initialLocation)
+    }
+
+    (Router(initialLocation, history, Nil), seedInitialState)
