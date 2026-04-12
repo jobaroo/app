@@ -10,9 +10,14 @@
 - `common/`: frontend HTTP/client helpers and shared constants.
 
 ## Rules
+- Run `source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk env` before SBT or Scala.js commands.
 - Keep backend contracts unchanged unless explicitly requested.
 - Read `DESIGN.md` before making UI changes.
 - Prefer changing the visual system in `ui/preset/Jobaroo.scala`, `styles.css`, and shared adapters/components before touching pages.
 - Do not leak raw ad-hoc styling into pages when a reusable preset or component belongs in `ui`, `tyrianui`, or `components`.
 - Keep page copy customer-facing; do not mention internal implementation details in the UI.
+- Secondary screens should expose an explicit in-app back affordance through shared components instead of relying on browser chrome alone.
+- Do not introduce UI controls that imply unsupported backend behavior. If the contract only supports max salary, the UI must say max salary until the contract changes.
 - Keep `DESIGN.md` and the implemented UI in sync.
+- Verify meaningful UI changes in a real browser with `playwright-cli`, not only by reading code.
+- Save Playwright screenshots inside `.playwright-cli/` and use `snapshot`, `console`, `eval`, and route navigation to inspect the rendered result before finishing.

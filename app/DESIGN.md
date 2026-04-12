@@ -16,22 +16,26 @@
 - Primary color is reserved for CTA buttons, active states, badges, and focus accents.
 
 ## Typography
-- Use a clean body face and a compact display face.
+- Use `Manrope` for body copy and `Space Grotesk` for headings and brand marks.
 - Headings should feel dense and confident.
 - Labels and microcopy should stay small, uppercase only when they help scanning.
 
 ## Layout rules
-- Global shell: compact dark header, large dark hero, light content canvas, dark footer.
-- Jobs page: left filter rail, dominant results column, flat white card stack.
-- Detail page: strong title block, fast metadata scan, clear external apply action.
-- Auth/profile pages: dark marketing panel paired with a bright form workspace.
-- Post-job page: form workspace on the left, sticky candidate preview rail on the right.
+- Global shell: compact dark header, light content canvas, dark footer. Do not add a marketing hero to every page by default.
+- Jobs page: fixed left filter rail, compact board header, flat white card grid, yellow accents only where they help scanning.
+- Jobs page filters must scale: searchable sections, scrollable rail on desktop, no dead controls or placeholder affordances.
+- Jobs page controls must map 1:1 to current backend capability. Do not ship dual-range salary, extra sort modes, or fake filter affordances until the contract supports them.
+- Detail page: dark title band, fast metadata scan, clear external apply action, white reading surface below.
+- Secondary pages must expose a visible back action near the top-left of the main content area. It should prefer in-app history and have a deterministic fallback.
+- Auth/profile pages: dark account panel paired with a bright form workspace.
+- Auth, recovery, and profile pages must use task-specific copy. Do not reuse the same headline/subtitle block for every account action.
+- Post-job page: dark recruiter hero, grouped form editor on the left, sticky candidate preview rail on the right with preview, listing signals, and checklist.
 
 ## Surface language
 - Prefer flat-to-soft cards over glassy gradients.
-- Use large rounded corners, thin borders, and shallow shadows.
-- White content cards should sit on a warm ivory background.
-- Dark hero/header/footer surfaces carry the strongest contrast on the page.
+- Use compact rounded corners, thin borders, and shallow shadows.
+- White content cards should sit on a clean white canvas with light neutral separators.
+- Dark header/footer and recruiter hero surfaces carry the strongest contrast on the page.
 
 ## Component rules
 - Job cards are dense and comparison-friendly:
@@ -44,14 +48,17 @@
   - tags
   - apply action
 - Filter groups should stay compact and scannable.
+- Detail pages should not repeat company, title, summary, compensation, or location across multiple sections.
 - Buttons should feel compact, bold, and obvious.
 - Form controls must have visible boundaries; do not let fields disappear into white cards.
+- Frontend validation should use native browser validity plus DaisyUI validator styling for URLs, emails, numbers, and required fields.
 - Icons should be simple inline SVG marks, never placeholder text tokens.
 
 ## Interaction
 - Keep motion subtle: small lift, border emphasis, shadow change.
 - Hover, focus, active, and disabled states must be visually distinct.
 - Theme toggle should preserve the same design language, not switch to a different product personality.
+- Preview rails should mirror the candidate-facing surface closely enough to be trusted, but should not duplicate entire pages inside the editor.
 
 ## Copy
 - Use customer-facing language.
