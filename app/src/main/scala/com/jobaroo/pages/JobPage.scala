@@ -60,6 +60,10 @@ final case class JobPage(
     )
 
   private def renderJobPage(job: Job): Html[App.Msg] =
+    val roleBadges =
+      Badge.render(if job.jobInfo.remote then "Remote" else "On-site", if job.jobInfo.remote then Badge.Tone.Primary else Badge.Tone.Outline) ::
+        job.jobInfo.seniority.toList.map(value => Badge.render(value, Badge.Tone.Outline))
+
     AppLayout.pageContainer(
       Card.surface(UiAttrs.classes(Jobaroo.surface.card))(
         Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
@@ -76,7 +80,10 @@ final case class JobPage(
                 ),
                 div(UiAttrs.classes(Jobaroo.jobs.copyColumnLarge))(
                   p(UiAttrs.classes(Jobaroo.jobs.companyWide))(text(job.jobInfo.company)),
-                  h1(UiAttrs.classes(Jobaroo.jobs.detailTitle))(text(job.jobInfo.title))
+                  h1(UiAttrs.classes(Jobaroo.jobs.detailTitle))(text(job.jobInfo.title)),
+                  div(UiAttrs.classes(Jobaroo.jobs.metaRow))(
+                    roleBadges*
+                  )
                 )
               ),
               JobComponents.renderJobSummary(job),
@@ -87,7 +94,7 @@ final case class JobPage(
             div(UiAttrs.classes(Jobaroo.jobs.actionsStack))(
               p(UiAttrs.classes(Jobaroo.jobs.detailTime))(text(MomentLib.unix(job.date / 1_000L).fromNow().toString)),
               Button.link(
-                Button.props[App.Msg]("Apply Now").copy(
+                Button.props[App.Msg]("Apply on Site").copy(
                   tone = Button.Tone.Primary
                 ),
                 hrefValue = job.jobInfo.externalUrl,

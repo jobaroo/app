@@ -58,7 +58,7 @@ object Field:
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.inputBase |+| Css.literal(
-            "w-full rounded-2xl border-base-300/70 bg-base-100/80 text-base shadow-sm"
+            "h-12 w-full rounded-[1.1rem] border-base-300 bg-base-200/70 px-4 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
           )) |+|
           UiAttrs(
             id     := meta.id.value,
@@ -88,7 +88,7 @@ object Field:
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.textareaBase |+| Css.literal(
-            "min-h-56 w-full rounded-[1.5rem] border-base-300/70 bg-base-100/80 text-base shadow-sm"
+            "min-h-56 w-full rounded-[1.25rem] border-base-300 bg-base-200/70 px-4 py-3 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
           )) |+|
           UiAttrs(
             id := meta.id.value,
@@ -116,7 +116,7 @@ object Field:
         attrs |+|
           controlAttrs |+|
           UiAttrs.classes(Daisy.groups.selectBase |+| Css.literal(
-            "w-full rounded-2xl border-base-300/70 bg-base-100/80 text-base shadow-sm"
+            "h-12 w-full rounded-[1.1rem] border-base-300 bg-base-200/70 px-4 text-base shadow-sm shadow-black/5 focus:border-neutral focus:outline-none"
           )) |+|
           UiAttrs(
             id := meta.id.value,

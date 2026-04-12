@@ -24,7 +24,9 @@ object Feedback:
   def alert[Msg](message: String, tone: Tone, attrs: UiAttrs[Msg] = UiAttrs.empty[Msg]): TyrianHtml[Msg] =
     val allAttrs =
       attrs |+| UiAttrs.classes(
-        Daisy.groups.alertBase |+| Css.literal("rounded-2xl border border-base-300/60 shadow-sm") |+| tone.classes
+        Daisy.groups.alertBase |+| Css.literal(
+          "items-start gap-3 rounded-[1.25rem] border border-base-300 bg-base-100 px-4 py-4 text-sm leading-6 shadow-none"
+        ) |+| tone.classes
       )
 
     val icon = tone match

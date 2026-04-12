@@ -18,8 +18,12 @@ import com.jobaroo.ui.preset.Jobaroo
 object JobComponents:
 
   def renderJob(job: Job): Html[App.Msg] =
+    val roleBadges =
+      Badge.render(if job.jobInfo.remote then "Remote" else "On-site", if job.jobInfo.remote then Badge.Tone.Primary else Badge.Tone.Outline) ::
+        job.jobInfo.seniority.toList.map(value => Badge.render(value, Badge.Tone.Outline))
+
     div(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.interactive))(
-      div(UiAttrs.classes(Jobaroo.surface.bodySpacious |+| Jobaroo.jobs.cardLayout))(
+      div(UiAttrs.classes(Jobaroo.jobs.cardBody |+| Jobaroo.jobs.cardLayout))(
         div(UiAttrs.classes(Jobaroo.jobs.previewRow))(
           div(UiAttrs.classes(Jobaroo.jobs.avatarWrap))(
             div(UiAttrs.classes(Jobaroo.jobs.avatarFrame))(
@@ -31,6 +35,9 @@ object JobComponents:
           ),
           div(UiAttrs.classes(Jobaroo.jobs.copyColumn))(
             div(UiAttrs.classes(Jobaroo.jobs.heading))(
+              div(UiAttrs.classes(Jobaroo.jobs.metaRow))(
+                roleBadges*
+              ),
               p(UiAttrs.classes(Jobaroo.jobs.company))(text(job.jobInfo.company)),
               h2(UiAttrs.classes(Jobaroo.jobs.title))(
                 Anchors.renderNavLink(
@@ -46,9 +53,9 @@ object JobComponents:
           )
         ),
         div(UiAttrs.classes(Jobaroo.jobs.actionsStack))(
-          p(UiAttrs.classes(Jobaroo.jobs.actionHint))(text("Candidate flow")),
+          p(UiAttrs.classes(Jobaroo.jobs.actionHint))(text("Apply on company site")),
           Button.link(
-            Button.props[App.Msg]("Apply").copy(tone = Button.Tone.Primary),
+            Button.props[App.Msg]("Apply Now").copy(tone = Button.Tone.Primary),
             hrefValue = job.jobInfo.externalUrl,
             newTab = true
           )
@@ -88,8 +95,7 @@ object JobComponents:
     List(
       renderDetail(Icons.banknotes(Jobaroo.icon.small), salaryText(job)),
       renderDetail(Icons.mapPin(Jobaroo.icon.small), locationText(job))
-    ) ++
-      job.jobInfo.seniority.toList.map(value => renderDetail(Icons.briefcase(Jobaroo.icon.small), value))
+    )
 
   private def renderTags(job: Job): Html[App.Msg] =
     div(UiAttrs.classes(Jobaroo.jobs.metaRow))(

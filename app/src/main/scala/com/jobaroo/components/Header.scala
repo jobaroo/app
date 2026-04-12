@@ -23,7 +23,7 @@ object Header:
       div(UiAttrs.classes(Jobaroo.nav.start))(
         logo,
         div(UiAttrs.classes(Jobaroo.nav.desktopCopy))(
-          p(UiAttrs.classes(Jobaroo.nav.subtitle))(text("JVM Jobs Platform")),
+          p(UiAttrs.classes(Jobaroo.nav.subtitle))(text("Focused hiring")),
           h1(UiAttrs.classes(Jobaroo.nav.title))(text("Jobaroo"))
         )
       ),
@@ -83,7 +83,7 @@ object Header:
     a(attrs)(
       img(UiAttrs.classes(Jobaroo.nav.logoImage) |+| UiAttrs(src := constants.logoImage, alt := "Jobaroo")),
       div(UiAttrs.classes(Jobaroo.nav.logoCopy))(
-        p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Hiring better")),
+        p(UiAttrs.classes(Jobaroo.nav.subtitle))(text("JVM roles")),
         p(UiAttrs.classes(Jobaroo.nav.logoTitle))(text("Jobaroo"))
       )
     )

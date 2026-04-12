@@ -68,7 +68,7 @@ object Daisy:
   object groups:
 
     val buttonBase        = Css.of(atoms.btn)
-    val badgeBase         = Css.of(atoms.badge, atoms.badgeLg)
+    val badgeBase         = Css.of(atoms.badge)
     val cardBase          = Css.of(atoms.card)
     val cardBodyBase      = Css.of(atoms.cardBody)
     val alertBase         = Css.of(atoms.alert)
@@ -79,7 +79,7 @@ object Daisy:
     val toggleBase        = Css.of(atoms.toggle, atoms.togglePrimary)
     val navbarBase        = Css.of(atoms.navbar)
     val menuBase          = Css.of(atoms.menu, atoms.menuHorizontal, atoms.roundedBox)
-    val footerBase        = Css.of(atoms.footer, atoms.footerCenter)
+    val footerBase        = Css.of(atoms.footer)
     val heroBase          = Css.of(atoms.hero)
     val heroContentBase   = Css.of(atoms.heroContent)
     val collapseBase      = Css.of(atoms.collapse, atoms.collapseArrow)

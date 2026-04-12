@@ -22,7 +22,7 @@ final case class NotFoundPage() extends Page:
             p(UiAttrs.classes(Jobaroo.section.eyebrow))(tyrian.Html.text("404")),
             h1(UiAttrs.classes(Jobaroo.notFound.title))(tyrian.Html.text("This page doesn't exist.")),
             p(UiAttrs.classes(Jobaroo.notFound.description))(
-              tyrian.Html.text("The route is unknown to the current frontend router. Use the main navigation to get back to active pages.")
+              tyrian.Html.text("The route could not be found. Use the main navigation to get back to the active hiring pages.")
             )
           )
         )

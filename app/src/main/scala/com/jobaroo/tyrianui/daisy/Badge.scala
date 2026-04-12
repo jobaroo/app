@@ -22,6 +22,10 @@ object Badge:
 
   def render[Msg](label: String, tone: Tone = Tone.Outline, attrs: UiAttrs[Msg] = UiAttrs.empty[Msg]): TyrianHtml[Msg] =
     val allAttrs =
-      attrs |+| UiAttrs.classes(Daisy.groups.badgeBase |+| Css.literal("gap-2 rounded-full px-3 py-3 font-medium") |+| tone.classes)
+      attrs |+| UiAttrs.classes(
+        Daisy.groups.badgeBase |+| Css.literal(
+          "gap-2 rounded-full px-3 py-2 text-[0.72rem] font-bold uppercase tracking-[0.16em]"
+        ) |+| tone.classes
+      )
 
     span(allAttrs)(text(label))

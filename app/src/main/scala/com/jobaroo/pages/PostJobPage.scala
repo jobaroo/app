@@ -56,8 +56,8 @@ final case class PostJobPage(
     if !Session.isActive then
       AppLayout.pageContainer(
         AppLayout.hero(
-          title = "Post a job with a cleaner hiring workflow.",
-          subtitle = "You need to be logged in before creating a listing.",
+          title = "Post a role that looks as strong as the team behind it.",
+          subtitle = "Sign in first to create a listing and manage it from the recruiter workspace.",
           eyebrow = "Recruiter Console"
         ),
         div(UiAttrs.classes(Jobaroo.state.centeredShort))(
@@ -67,11 +67,12 @@ final case class PostJobPage(
     else
       AppLayout.pageContainer(
         AppLayout.hero(
-          title = "Publish a role that candidates actually want to read.",
-          subtitle = "The submit flow stays wired to the current backend. This page is being rebuilt as a disciplined UI layer with a live preview and cleaner composition.",
+          title = "Publish a role that candidates can understand in seconds.",
+          subtitle = "Shape the headline, compensation, location, and description in one focused editor with a live candidate preview.",
           eyebrow = "Recruiter Console",
           actions = Seq(
-            Badge.render(s"Promoted listing $$${constants.jobAdvertPriceUSD}", Badge.Tone.Primary)
+            Badge.render(s"Promoted listing $$${constants.jobAdvertPriceUSD}", Badge.Tone.Primary),
+            Badge.render("Live preview", Badge.Tone.Outline)
           )
         ),
         div(UiAttrs.classes(Jobaroo.shell.splitWide))(
@@ -128,7 +129,7 @@ final case class PostJobPage(
         AppLayout.sectionTitle(
           eyebrow = "Role details",
           title = "Compose the listing",
-          subtitle = "Keep the structure tight: title, compensation, location, signal, and a strong description."
+          subtitle = "Give candidates the essentials quickly: what the role is, what it pays, where it sits, and why it matters."
         ),
         renderStatusAlert,
         form(
@@ -151,8 +152,8 @@ final case class PostJobPage(
       Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.stickyRail))(
         Card.body(UiAttrs.classes(Jobaroo.surface.bodyCompact))(
           div(UiAttrs.classes(Jobaroo.post.previewHeader))(
-            p(UiAttrs.classes(Jobaroo.post.previewEyebrow))(text("Live preview")),
-            h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("How candidates will see it"))
+            p(UiAttrs.classes(Jobaroo.post.previewEyebrow))(text("Candidate preview")),
+            h3(UiAttrs.classes(Jobaroo.post.previewTitle))(text("How the listing reads"))
           ),
           renderPreviewCard,
           renderChecklist
@@ -200,7 +201,7 @@ final case class PostJobPage(
 
   private def renderChecklist: Html[App.Msg] =
     div(UiAttrs.classes(Jobaroo.post.checklist))(
-      p(UiAttrs.classes(Jobaroo.post.checklistTitle))(text("Readiness")),
+      p(UiAttrs.classes(Jobaroo.post.checklistTitle))(text("Listing checklist")),
       ul(UiAttrs.classes(Jobaroo.post.checklistList))(
         checklistItem("Company name is set", company.nonEmpty),
         checklistItem("Job title is set", title.nonEmpty),
@@ -221,7 +222,7 @@ final case class PostJobPage(
   private def descriptionPreview: String =
     fallback(
       PreviewText.fromMarkdown(description),
-      "Add a concise, candidate-first description. This live preview updates from the current Tyrian state."
+      "Add a concise, candidate-first description that explains the role, the impact, and why someone should care."
     )
 
   private def locationPreview: String =

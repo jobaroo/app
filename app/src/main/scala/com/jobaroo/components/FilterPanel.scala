@@ -51,9 +51,9 @@ final case class FilterPanel(
     Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.stickyRail))(
       Card.body(UiAttrs.classes(Jobaroo.surface.bodyPanel))(
         div(UiAttrs.classes(Jobaroo.filter.header))(
-          p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Filter jobs")),
-          h2(UiAttrs.classes(Jobaroo.post.previewTitle))(text("Narrow the market")),
-          p(UiAttrs.classes(Jobaroo.filter.intro))(text("Typed controls, same page-level filtering behavior."))
+          p(UiAttrs.classes(Jobaroo.section.eyebrow))(text("Search filters")),
+          h2(UiAttrs.classes(Jobaroo.post.previewTitle))(text("Refine results")),
+          p(UiAttrs.classes(Jobaroo.filter.intro))(text("Filter by salary, remote status, company, location, country, tag, and seniority."))
         ),
         optError.fold(div())(error => Feedback.alert(error, Feedback.Tone.Error)),
         salaryFilter,
@@ -65,7 +65,7 @@ final case class FilterPanel(
         checkboxGroup("Seniorities", jobFilters.seniorities),
         div(UiAttrs.classes(Jobaroo.filter.actionGrid))(
           Button.render(
-            Button.props[App.Msg]("Apply Filters").copy(
+            Button.props[App.Msg]("Update Results").copy(
               width = Button.Width.Full,
               disabled = !isDirty,
               onPress = Some(TriggerFilter)
@@ -79,7 +79,7 @@ final case class FilterPanel(
     renderFilterGroup(
       title = "Salary",
       content = Field.textInput(
-        meta = Field.Meta.static("filter-salary", "Minimum salary", hint = Some("Use the candidate-facing local currency.")),
+        meta = Field.Meta.static("filter-salary", "Minimum salary", hint = Some("Set the minimum visible salary floor.")),
         currentValue = if maxSalary == 0 then "" else maxSalary.toString,
         onValue = value => UpdateSalary(value.toIntOption.getOrElse(0)),
         kind = Field.InputKind.Number,

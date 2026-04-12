@@ -12,9 +12,9 @@ import com.jobaroo.common.*
 import com.jobaroo.pages.Page
 import com.jobaroo.common.Endpoint
 import com.jobaroo.domain.auth.*
-import com.jobaroo.pages.Page.urls
 
 import com.jobaroo.core.Session
+import com.jobaroo.components.AppLayout
 import com.jobaroo.tyrianui.core.UiAttrs
 import com.jobaroo.tyrianui.html.Tags.{div, span}
 import com.jobaroo.ui.preset.Jobaroo
@@ -43,9 +43,11 @@ final case class ProfilePage(oldPassword: String = "", newPassword: String = "",
   override def view: Html[App.Msg] =
     if Session.isActive then super.view
     else
-      div(UiAttrs.classes(Jobaroo.state.centeredWide))(
-        div(UiAttrs.classes(Jobaroo.alert.warningCard))(
-          span()(text("It seems you're not logged in."))
+      AppLayout.pageContainer(
+        div(UiAttrs.classes(Jobaroo.state.centeredWide))(
+          div(UiAttrs.classes(Jobaroo.alert.warningCard))(
+            span()(text("You need to be logged in to manage your profile settings."))
+          )
         )
       )
 

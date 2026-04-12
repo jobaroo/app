@@ -18,9 +18,10 @@ import com.jobaroo.domain.job.*
 import com.jobaroo.pages.JobListPage.FilterJobs
 import com.jobaroo.pages.Page.Kind
 import com.jobaroo.tyrianui.core.UiAttrs
+import com.jobaroo.tyrianui.daisy.Badge
 import com.jobaroo.tyrianui.daisy.Button
 import com.jobaroo.tyrianui.daisy.Feedback
-import com.jobaroo.tyrianui.html.Tags.{div, span}
+import com.jobaroo.tyrianui.html.Tags.div
 import com.jobaroo.ui.preset.Jobaroo
 
 final case class JobListPage(
@@ -50,11 +51,12 @@ final case class JobListPage(
   override def view: Html[App.Msg] =
     AppLayout.pageContainer(
       AppLayout.hero(
-        title = "Find the best JVM jobs without fighting the interface.",
-        subtitle = "A cleaner board for Scala, Java, and adjacent backend teams. Filtering stays local to the page model; the visual system is now separate and composable.",
+        title = "Discover JVM roles that are easy to scan and worth your time.",
+        subtitle = "Search curated Scala, Java, and backend openings with clearer compensation, cleaner filters, and calmer browsing.",
         eyebrow = "Jobaroo Market",
         actions = Seq(
-          span(UiAttrs.classes(Jobaroo.hero.counterBadge))(text(s"${jobs.length} loaded"))
+          Badge.render(s"${jobs.length} live roles", Badge.Tone.Primary),
+          Badge.render("Backend teams", Badge.Tone.Outline)
         )
       ),
       AppLayout.split(
@@ -64,7 +66,7 @@ final case class JobListPage(
             AppLayout.sectionTitle(
               eyebrow = "Live board",
               title = "Open roles for serious backend teams",
-              subtitle = "The data and endpoints are unchanged. Only the UI surface is being rebuilt."
+              subtitle = "Browse by company, location, seniority, and compensation without losing the thread."
             ),
             div(UiAttrs.classes(Jobaroo.jobs.statPill))(text(s"${jobs.length} visible roles"))
           ),
@@ -82,7 +84,7 @@ final case class JobListPage(
           case Kind.SUCCESS =>
             if canLoadMore then
               Button.render(
-                Button.props[App.Msg]("Load More Jobs").copy(
+                Button.props[App.Msg]("Load More Roles").copy(
                   tone = Button.Tone.Primary,
                   onPress = Some(LoadMoreJobs)
                 )

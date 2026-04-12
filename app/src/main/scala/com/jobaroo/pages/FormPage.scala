@@ -33,17 +33,17 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
             p(UiAttrs.classes(Jobaroo.form.marketingEyebrow))(text("Jobaroo Account")),
             h1(UiAttrs.classes(Jobaroo.form.marketingTitle))(text(title)),
             p(UiAttrs.classes(Jobaroo.form.marketingSubtitle))(
-              text("A cleaner hiring flow starts with a predictable UI surface. This branch keeps the application behavior intact while replacing the presentation layer.")
+              text("Move through account and recruiter tasks with a calmer interface, clearer hierarchy, and less friction.")
             )
           ),
           div(UiAttrs.classes(Jobaroo.form.marketingStats))(
-            statCard("Fast", "Tyrian-powered flow with predictable state transitions."),
-            statCard("Typed", "Cats-based composition primitives and immutable props.")
+            statCard("Focused", "Stay on the task with clean forms, strong hierarchy, and direct feedback."),
+            statCard("Reliable", "The same account powers browsing, posting, and recruiter workflows.")
           )
         ),
         Card.surface(UiAttrs.classes(Jobaroo.surface.card |+| Jobaroo.surface.fullHeight))(
           Card.body(UiAttrs.classes(Jobaroo.surface.bodySpacious))(
-            AppLayout.sectionTitle("Secure access", title, "No backend behavior changes. UI concerns only."),
+            AppLayout.sectionTitle("Account access", title, "Use your Jobaroo account to manage hiring and profile settings in one place."),
             renderStatus,
             form(
               UiAttrs(name := "sign-in", id := "form") |+|
@@ -163,7 +163,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
       label(UiAttrs.classes(Jobaroo.form.fileLabel))(
         div(UiAttrs.classes(Jobaroo.form.fileCopy))(
           p(UiAttrs.classes(Jobaroo.form.fileTitle))(text("Upload company logo")),
-          p(UiAttrs.classes(Jobaroo.form.fileDescription))(text("Images are resized client-side before submit."))
+          p(UiAttrs.classes(Jobaroo.form.fileDescription))(text("Use a clear square logo for the strongest card preview."))
         ),
         com.jobaroo.tyrianui.html.Tags.input(
           UiAttrs(`type` := "file", id := uid, accept := "image/*") |+|
