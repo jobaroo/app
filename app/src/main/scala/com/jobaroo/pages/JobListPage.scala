@@ -40,9 +40,8 @@ final case class JobListPage(
       (setSuccessStatus(s"Loaded ${jobs.length}").copy(jobs = this.jobs ++ jobs, canLoadMore = canLoadMore), Cmd.None)
     case JobFailure(error)               => (setErrorStatus(error), Cmd.None)
     case LoadMoreJobs                    => (this, commands.getJobs(jobFilter = this.jobFilters, offset = jobs.length))
-    case FilterJobs(filters)             =>
-      val newJobFilters = parseJobFilters(filters)
-      (this.copy(jobs = Nil, jobFilters = newJobFilters), commands.getJobs(jobFilter = newJobFilters))
+    case FilterJobs(filter)              =>
+      (this.copy(jobs = Nil, jobFilters = filter), commands.getJobs(jobFilter = filter))
     case filterPanelMsg: FilterPanel.Msg =>
       val (newFilterPanel, cmd) = filterPanel.update(filterPanelMsg)
       (this.copy(filterPanel = newFilterPanel), cmd)
@@ -92,17 +91,6 @@ final case class JobListPage(
       )
     case None    => div()
 
-  def parseJobFilters(filters: Map[String, Set[String]]): JobFilter =
-    new JobFilter(
-      companies = filters.getOrElse("Companies", Set.empty).toList,
-      locations = filters.getOrElse("Locations", Set.empty).toList,
-      countries = filters.getOrElse("Countries", Set.empty).toList,
-      seniorities = filters.getOrElse("Seniorities", Set.empty).toList,
-      tags = filters.getOrElse("Tags", Set.empty).toList,
-      maxSalary = Option.when(filterPanel.maxSalary > 0)(filterPanel.maxSalary),
-      remote = filterPanel.remote
-    )
-
   private def setErrorStatus(message: String)   = this.copy(status = Some(Page.Status(message, Page.Kind.ERROR)))
   private def setSuccessStatus(message: String) = this.copy(status = Some(Page.Status(message, Page.Kind.SUCCESS)))
 
@@ -111,7 +99,7 @@ object JobListPage:
   trait Msg                                                       extends App.Msg
   final case class JobFailure(error: String)                      extends Msg
   final case class AddJobs(jobs: List[Job], canLoadMore: Boolean) extends Msg
-  final case class FilterJobs(filters: Map[String, Set[String]])  extends Msg
+  final case class FilterJobs(filter: JobFilter)                  extends Msg
   case object LoadMoreJobs                                        extends Msg
 
   object endpoints:

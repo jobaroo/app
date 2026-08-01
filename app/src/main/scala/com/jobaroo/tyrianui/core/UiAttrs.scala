@@ -4,7 +4,7 @@ import cats.Monoid
 import cats.data.Chain
 import cats.syntax.all.*
 import com.jobaroo.ui.core.Css
-import tyrian.Attr
+import tyrian.{Attr, Property}
 import tyrian.Html.`class`
 import tyrian.Html.attribute
 
@@ -28,6 +28,12 @@ object UiAttrs:
 
   def data[Msg](name: String, value: String): UiAttrs[Msg] =
     UiAttrs(attribute(s"data-$name", value))
+
+  def domProperty[Msg](name: String, value: String): UiAttrs[Msg] =
+    UiAttrs(Property(name, value))
+
+  def booleanDomProperty[Msg](name: String, enabled: Boolean): UiAttrs[Msg] =
+    domProperty(name, if enabled then name else "")
 
   given [Msg]: Monoid[UiAttrs[Msg]] with
     override def empty: UiAttrs[Msg] = UiAttrs.empty

@@ -16,6 +16,8 @@
 - Prefer changing the visual system in `ui/preset/Jobaroo.scala`, `styles.css`, and shared adapters/components before touching pages.
 - Do not leak raw ad-hoc styling into pages when a reusable preset or component belongs in `ui`, `tyrianui`, or `components`.
 - Keep Tyrian varargs/child-sequence glue inside `tyrianui`. Pages and app components should compose child collections through shared helpers, not `toSeq*`/manual varargs expansion.
+- Shared interactive controls such as switches/toggles belong in `tyrianui`; pages should pass intent and styling, not DOM event mechanics.
+- For checkbox/toggle state, use `UiAttrs.booleanDomProperty("checked", ...)` through `tyrianui` instead of raw `checked(...)`; Tyrian boolean controls need DOM-property syncing to reset reliably.
 - Keep page copy customer-facing; do not mention internal implementation details in the UI.
 - Secondary screens should expose an explicit in-app back affordance through shared components instead of relying on browser chrome alone.
 - Do not introduce UI controls that imply unsupported backend behavior. If the contract only supports max salary, the UI must say max salary until the contract changes.

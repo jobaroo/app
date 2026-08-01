@@ -210,12 +210,12 @@ object Field:
           UiAttrs(
             id     := meta.id.value,
             `type` := "checkbox",
-            checked(checkedValue),
             onEvent(
               "change",
               event => onChangeValue(event.target.asInstanceOf[org.scalajs.dom.HTMLInputElement].checked)
             )
-          )
+          ) |+|
+          UiAttrs.booleanDomProperty("checked", checkedValue)
       )
     )
 
@@ -242,12 +242,12 @@ object Field:
           UiAttrs(
             id     := meta.id.value,
             `type` := "checkbox",
-            checked(checkedValue),
             onEvent(
               "change",
               event => onChangeValue(event.target.asInstanceOf[org.scalajs.dom.HTMLInputElement].checked)
             )
-          )
+          ) |+|
+          UiAttrs.booleanDomProperty("checked", checkedValue)
       )
     )
 

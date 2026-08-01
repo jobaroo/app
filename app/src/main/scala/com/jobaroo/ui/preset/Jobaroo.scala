@@ -270,8 +270,10 @@ object Jobaroo:
     val actionGrid = Css.literal("grid gap-2")
     val groupContent = Css.literal("space-y-1")
     val groupWrap    = Css.literal("mb-5 space-y-3")
+    val sectionDisabled = Css.literal("opacity-60")
     val searchInput  = Css.literal("input input-bordered input-sm w-full rounded-md border-base-300 bg-base-100 text-sm shadow-none focus:border-primary focus:outline-none")
     val emptyState   = Css.literal("text-xs text-base-content/50")
+    val helperText   = Css.literal("text-xs text-base-content/50")
 
     val collapse =
       Daisy.groups.collapseBase |+| Css.literal("mb-5 rounded-box bg-base-100 border-none")
@@ -283,8 +285,17 @@ object Jobaroo:
 
     val sectionTitle = Css.literal("text-sm font-medium")
     val rowOption    = Css.literal("flex items-center gap-2 rounded p-1 hover:bg-base-200")
+    val rowOptionDisabled = Css.literal("cursor-not-allowed hover:bg-transparent")
     val pillGroup    = Css.literal("flex flex-wrap gap-1")
     val salaryBox    = Css.literal("rounded-lg bg-base-200 px-3 py-2 text-center text-sm font-semibold text-primary")
+    val remoteSwitch =
+      Css.literal(
+        "inline-flex min-w-16 items-center justify-between rounded-full border border-base-300 bg-base-200 px-1 py-1 transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      )
+    val remoteSwitchOn  = Css.literal("border-primary bg-primary text-primary-content")
+    val remoteSwitchOff = Css.literal("text-base-content/70")
+    val remoteState     = Css.literal("px-2 text-[10px] font-semibold uppercase tracking-[0.22em]")
+    val remoteThumb     = Css.literal("size-5 rounded-full bg-base-100 shadow-sm")
 
   object post:
 
